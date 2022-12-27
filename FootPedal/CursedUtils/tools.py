@@ -100,7 +100,7 @@ def wrappedList(theList, maxLength ):
             while len( wordlist ) != 0 :
                 
                 if len( wordlist[0] ) > maxLength:
-                    #split it into confirming lengths,
+                    #split it into conforming lengths,
                     #add it to the beginning of the list                      
                     wordlist = splitWord( wordlist[0] ).extend( wordlist )
                     
