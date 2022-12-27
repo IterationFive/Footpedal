@@ -6,9 +6,18 @@ Created on Dec 27, 2022
 These are keystrokes as captured by python running in a command window on windows 10.
 
 You will note some keys are missing; they do not register as curses keystrokes.
+
 F11 will cause the command window to become fullscreen, but it also registers
 as a keypress.  There's probably a context in which that keypress will register
 as 275 instead of 546, but this isn't it.
+
+Some keystrokes listed are interrupted or co-opted with other functions
+and your inability to use them isn't anything I can help.
+
+Also, anything that returned '0' was not included, because
+it's not actually mappable.  
+
+
 
 '''
 
@@ -92,4 +101,56 @@ MAP = {
 'a+6': 413,
 'a+7': 414,
 'a+8': 415,
-'a+9': 416 }
+'a+9': 416,
+'a+a': 417,
+'a+b': 418,
+'a+c': 419,
+'a+d': 420,
+'a+e': 421,
+'a+f': 422,
+'a+g': 423,
+'a+h': 424,
+'a+i': 425,
+'a+j': 426,
+'a+k': 427,
+'a+l': 428,
+'a+m': 429,
+'a+n': 430,
+'a+o': 431,
+'a+p': 432,
+'a+q': 433,
+'a+r': 434,
+'a+s': 435,
+'a+t': 436,
+'a+u': 437,
+'a+v': 438,
+'a+w': 439,
+'a+x': 440,
+'a+y': 441,
+'a+z': 442,
+'c+a': 1,
+'c+b': 2,
+'c+c': 3,
+'c+d': 4,
+'c+e': 5,
+'c+f': 6,
+'c+g': 7,
+'c+h': 8,
+'c+i': 9,
+'c+j': 10,
+'c+k': 11,
+'c+l': 12,
+'c+m': 13,
+'c+n': 14,
+'c+o': 15,
+'c+p': 16,
+'c+q': 17,
+'c+r': 18,
+'c+s': 19,
+'c+t': 20,
+'c+u': 21,
+'c+v': 22,
+'c+w': 23,
+'c+x': 24,
+'c+y': 25,
+'c+z': 26 }
