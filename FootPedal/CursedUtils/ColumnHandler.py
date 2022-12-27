@@ -6,13 +6,13 @@ Created on Dec 24, 2022
 
 import CursedUtils as cu
 
-class CursedColumn(object):
+class ColumnHandler(object):
     '''
     classdocs
     '''
 
 
-    def __init__( self, window:cu.CursedScreen, contents:list, y, x, 
+    def __init__( self, window:cu.ScreenHandler, contents:list, y, x, 
                  maxHeight=False, maxWidth=False, spacing=0, wordWrap=True,
                  yAlign=cu.TOP, iAlign=cu.LEFT, xAlign=cu.LEFT):
         '''

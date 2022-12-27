@@ -19,5 +19,7 @@ DOWN = 1
 AUTO = -2
 
 from CursedUtils.tools import *
-from CursedUtils.CursedScreen import CursedScreen
-from CursedUtils.CursedColumn import CursedColumn
+from CursedUtils.ScreenHandler import ScreenHandler
+from CursedUtils.WindowHandler import WindowHandler
+from CursedUtils.ColumnHandler import ColumnHandler
+from CursedUtils.KeyResponses import KeyResponses

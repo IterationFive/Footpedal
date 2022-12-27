@@ -5,7 +5,7 @@ Created on Dec 22, 2022
 '''
 
 import HandBrakeUtils.queueManager as qm
-from CursedUtils import CursedScreen
+from CursedUtils import ScreenHandler
 from time import sleep
 from threading import Thread
 
@@ -15,7 +15,7 @@ class HandbrakeChyron(object):
     '''
 
 
-    def __init__(self, window:CursedScreen, hqm:qm.hbQueueManager):
+    def __init__(self, window:ScreenHandler, hqm:qm.hbQueueManager):
         '''
         Constructor
         '''

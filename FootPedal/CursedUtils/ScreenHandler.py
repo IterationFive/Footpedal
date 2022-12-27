@@ -6,7 +6,7 @@ Created on Dec 5, 2022
 import curses
 from curses.textpad import Textbox
 
-class CursedScreen( object ):
+class ScreenHandler( object ):
     
     def __init__(self, y=None, x=None):
         

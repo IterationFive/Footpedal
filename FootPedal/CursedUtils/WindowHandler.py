@@ -5,14 +5,14 @@ Created on Dec 8, 2022
 '''
 
 import curses
-from CursedUtils import CursedScreen
+from CursedUtils import ScreenHandler
 
-class CursedWindow(CursedScreen):
+class WindowHandler(ScreenHandler):
     '''
     classdocs
     '''
     
-    def __init__(self, parent:CursedScreen, height, width, y, x ):
+    def __init__(self, parent:ScreenHandler, height, width, y, x ):
         
         self.parent = parent
         self.config = parent.config
