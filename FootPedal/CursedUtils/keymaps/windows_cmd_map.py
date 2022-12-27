@@ -115,7 +115,7 @@ Now we can provide the keymap.  It should be noted that certain keystrokes are l
 order in the sequence was obvious, but are still unavailable, as per above.
 '''
 
-MAP={
+KEYMAP={
 'escape' : 27,
 'backspace' : 8,
 'ctrl+backspace' : 127,
