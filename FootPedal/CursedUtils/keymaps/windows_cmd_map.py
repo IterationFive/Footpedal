@@ -286,7 +286,10 @@ KEYMAP={
 'alt+8' : 415,
 'alt+9' : 416,
 'alt+0' : 407,
-'alt+:' : 500
+'alt+:' : 500,
+'tab' : 9,
+'shift+tab': 351,
+'ctrl+tab': 482
 }
 
 PADTRANSLATOR = {
