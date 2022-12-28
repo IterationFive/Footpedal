@@ -4,9 +4,9 @@ Created on Dec 27, 2022
 @author: Cather Steincamp
 '''
 
-from CursedUtils.keymaps import KEYMAP
+from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
 
-class KeyResponses(object):
+class KeyResponder(object):
     '''
     Creates a set of responses to keys.  
     '''
@@ -36,7 +36,7 @@ class KeyResponses(object):
         '''
             key
                 the number, character, or special string corresponding to the keystroke 
-                to which we want to respond
+                to which we want to respond, or 'default'
             action
                 the function (passed as reference!) to run when they key is pressed
                 
@@ -92,6 +92,26 @@ class KeyResponses(object):
                 
             self.responses[key] = response
             
+    def getReponse(self, key):
+        #retrieves the response associated with a given key
+        
+        if key in self.aliases:
+            key = self.aliases[ key ]
+                
+        if self.translateNumpad and key in PADTRANSLATOR:
+            key = PADTRANSLATOR[ key ]
+        
+        if key in self.responses:
+            return self.responses[key]
+        elif 'default' in self.responses:
+            return self.responses['default']
+        else:
+            return -1
+            
+    def clearResponse(self, key):        
+        if key in self.responses:
+            del self.responses[key]
+            
     def translateKey(self, key ):
         
         if type( key ) == str:
@@ -107,11 +127,12 @@ class KeyResponses(object):
         else:
             return False
             
-    def clearResponse(self, key):        
-        if key in self.responses:
-            del self.responses[key]
-            
     def setAlias(self, pressThisKey, butReportThisKey ):
+        '''
+            allows you to set a key to respond as if it were another key
+            it passKey or passNumber is set in the response, it will pass
+            the SECOND key, not the key you pressed.
+        '''
         pressThisKey = self.translateKey(pressThisKey)
         butReportThisKey = self.translateKey(butReportThisKey)
         
@@ -119,12 +140,98 @@ class KeyResponses(object):
             self.aliases[pressThisKey] = butReportThisKey
             
     def copy(self):
+        '''
+            produces a "deep" copy of the object instance
+        '''
         
-        r = KeyResponses( self.activateKeypad, self.translateNumpad, self.caseSenstive )
+        r = KeyResponder( self.activateKeypad, self.translateNumpad, self.caseSenstive )
         r.aliases = self.aliases.copy()
         
         for key in self.responses:
             r.setResponse(key, **self.responses[key])
             
         return r
+    
+    def merge(self, responder):
+        '''
+            incorporates the aliases and responses from another
+            keyResponder object; the aliases and responses
+            from the imported object will have priority
+        '''
+        
+        self.aliases.update( responder.aliases )
+        self.responses.update( responder.responses )
+    
+    def reverseLookup(self, keyNumber):
+        # produces character or mapstring from number
+        
+        for i in KEYMAP:
+            if keyNumber == KEYMAP[i]:
+                return i
+            
+        return( chr( keyNumber ))
+            
+    def respond(self, key, *moreargs, **morekwargs):
+        '''
+            any additional positional or keyword arguments provided here
+            will be passed to the action.
+            
+            the order of positional arguments is:
+                provided by passKey (if set in response)
+                provided by PassNumber (if set in response)
+                specified in response['args']
+                specified here
+                
+            The order of priority for keyword arguments is:
+                passKey and/or passNumber, if set in response, override all
+                arguments provided here will override arguements in repsonse['kwargs']
+                response['kwargs'] overrides nothing
+                
+            returns -1 if no response is defined
+        '''
+        
+        if self.caseSensitive == False and key > 64 and key < 91: #A-Z are 65-90
+            key += 32 #a-z are 97 to 122
+        
+        if key in self.aliases:
+            key = self.aliases[ key ]
+                
+        if self.translateNumpad and key in PADTRANSLATOR:
+            key = PADTRANSLATOR[ key ]
+        
+        if key in self.responses:
+            response =  self.responses[key]
+        elif 'default' in self.responses:
+            response =  self.responses['default']
+        else:
+            response = False
+            
+        if response != False:
+            
+            if 'args' in response:
+                args = response['args'].extend( moreargs )
+            else:
+                args = moreargs.copy()
+            
+            if 'kwargs' in response:
+                kwargs = response['kwargs'].copy()
+                kwargs.update( morekwargs )
+            else:
+                kwargs = morekwargs
+            
+            if response['passNumber'] ==True:
+                args.insert( 0,  key)
+            elif response['passNumber'] != False:
+                kwargs[response['passNumber']] = key
+                
+            if response['passKey'] == True:
+                args.insert( 0, self.reverseLookup(key))
+            elif response['passKey'] != True:
+                kwargs[response['passKey']] = self.reverseLookup(key) 
+                
+                
+            return response['action']( *args, **kwargs )
+            
+        else:
+            return -1 
         
