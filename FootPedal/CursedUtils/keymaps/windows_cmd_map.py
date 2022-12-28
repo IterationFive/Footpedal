@@ -73,13 +73,15 @@ shift+padright
 
 Certain keys produce an identical response to other keys:
 
+ctrl+i* : tab
 ctrl+j* : enter
 shift+enter :  enter
 alt+enter* : f11**
 alt+padenter : f11**
 ctrl+[ : escape 
 
-*these items appear on the map as well as the item they duplicate.
+*these items appear on the map as well as the item they duplicate.  reverse key lookups
+   will return the original key( for example, tab, enter, or F11).
 *F11 as it appears in this map, value 546.
 
 
@@ -124,6 +126,10 @@ KEYMAP={
 'backspace' : 8,
 'ctrl+backspace' : 127,
 'alt+backspace' : 504,
+'enter':10,
+'tab' : 9,
+'shift+tab': 351,
+'ctrl+tab': 482,
 'f1' : 265,
 'f2' : 266,
 'f3' : 267,
@@ -286,10 +292,7 @@ KEYMAP={
 'alt+8' : 415,
 'alt+9' : 416,
 'alt+0' : 407,
-'alt+:' : 500,
-'tab' : 9,
-'shift+tab': 351,
-'ctrl+tab': 482
+'alt+:' : 500
 }
 
 PADTRANSLATOR = {
