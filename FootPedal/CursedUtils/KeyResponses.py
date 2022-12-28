@@ -22,6 +22,8 @@ class KeyResponses(object):
             caseSensitive
                 determines if uppercase letters are treated as different input that their lowercase
                 counterparts
+                If true, all uppercase characters will be translated to lowercase when assigned,
+                and the keyProcessor 
         '''
         self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
@@ -74,6 +76,9 @@ class KeyResponses(object):
         key = self.translateKey(key)
                 
         if key != False:
+            
+            if self.caseSensitive == False and key > 64 and key < 91 : #65-90 is A-Z
+                key += 32 
             
             response = { 'action': action  }
             if passKeystroke != False:
