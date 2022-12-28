@@ -112,4 +112,14 @@ class KeyResponses(object):
         
         if pressThisKey != False and butReportThisKey != False:
             self.aliases[pressThisKey] = butReportThisKey
+            
+    def copy(self):
+        
+        r = KeyResponses( self.activateKeypad, self.translateNumpad, self.caseSenstive )
+        r.aliases = self.aliases.copy()
+        
+        for key in self.responses:
+            r.setResponse(key, **self.responses[key])
+            
+        return r
         
