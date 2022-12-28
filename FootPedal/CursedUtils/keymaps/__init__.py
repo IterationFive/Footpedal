@@ -1,1 +1,1 @@
-from CursedUtils.keymaps.windows_cmd_map import KEYMAP
+from CursedUtils.keymaps.windows_cmd_map import KEYMAP, PADTRANSLATOR

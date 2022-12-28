@@ -73,14 +73,18 @@ shift+padright
 
 Certain keys produce an identical response to other keys:
 
-ctrl+j : enter
-alt+enter : f11
-alt+padenter : f11
+ctrl+j* : enter
 shift+enter :  enter
+alt+enter* : f11**
+alt+padenter : f11**
 ctrl+[ : escape 
 
+*these items appear on the map as well as the item they duplicate.
+*F11 as it appears in this map, value 546.
 
-Certain keys, for reasons lost to god, man, and the acoustic modem, return 0.  These are as follows:
+
+
+Certain keys, for reasons lost to God, history, and the acoustic modem, return 0.  These are as follows:
 
 ctrl+1
 ctrl+2
@@ -242,6 +246,7 @@ KEYMAP={
 'ctrl+padpagedown' : 510,
 'ctrl+padleft' : 511,
 'ctrl+padright' : 513,
+'alt+enter' : 546,
 'alt+insert' : 479,
 'alt+delete' : 478,
 'alt+home' : 486,
@@ -283,3 +288,31 @@ KEYMAP={
 'alt+0' : 407,
 'alt+:' : 500
 }
+
+PADTRANSLATOR = {
+    449:262,
+    455:358,
+    506:331,
+    462:330,
+    451:339,
+    457:338,
+    450:259,
+    456:258,
+    452:260,
+    45:261,
+    507:477,
+    466:527,
+    516:445,
+    510:446,
+    511:443,
+    513:444,
+    524:486,
+    518:489,
+    517:479,
+    476:478,
+    526:487,
+    520:488,
+    525:490,
+    519:491,
+    521:493,
+    523:492}
