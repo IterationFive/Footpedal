@@ -8,7 +8,7 @@ from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
 
 class KeyResponder(object):
     '''
-    Creates a set of responses to keys.  
+    This class is defined to simplify the use of keys in curses.
     '''
 
 
@@ -92,27 +92,13 @@ class KeyResponder(object):
                 
             self.responses[key] = response
             
-    def getReponse(self, key):
-        #retrieves the response associated with a given key
-        
-        if key in self.aliases:
-            key = self.aliases[ key ]
-                
-        if self.translateNumpad and key in PADTRANSLATOR:
-            key = PADTRANSLATOR[ key ]
-        
-        if key in self.responses:
-            return self.responses[key]
-        elif 'default' in self.responses:
-            return self.responses['default']
-        else:
-            return -1
-            
     def clearResponse(self, key):        
         if key in self.responses:
             del self.responses[key]
             
     def translateKey(self, key ):
+        # converts a character or map string to 
+        # the corresponding number
         
         if type( key ) == str:
             if len( key ) == 1:
@@ -173,8 +159,15 @@ class KeyResponder(object):
             
     def respond(self, key, *moreargs, **morekwargs):
         '''
-            any additional positional or keyword arguments provided here
-            will be passed to the action.
+            takes the number provided by window.getch() and, 
+            checks to see if it needs to be:
+                converted to lowercase (if self.caseSensitive is False)
+                converted to an alias 
+                converted from a numpad key to its non-numpad counter part (if self.translateNumpad is True)
+                
+            If the key has a response assigned, or if there is a 'default' assignment,
+            then the action assigned will be executed, with any arguments provided in the response
+            definition, as well as any additional arguments provided as moreargs and morekwargs.
             
             the order of positional arguments is:
                 provided by passKey (if set in response)
@@ -184,7 +177,7 @@ class KeyResponder(object):
                 
             The order of priority for keyword arguments is:
                 passKey and/or passNumber, if set in response, override all
-                arguments provided here will override arguements in repsonse['kwargs']
+                arguments provided here will override arguments in repsonse['kwargs']
                 response['kwargs'] overrides nothing
                 
             returns -1 if no response is defined

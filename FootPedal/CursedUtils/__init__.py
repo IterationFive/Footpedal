@@ -22,5 +22,5 @@ from CursedUtils.tools import *
 from CursedUtils.ScreenHandler import ScreenHandler
 from CursedUtils.WindowHandler import WindowHandler
 from CursedUtils.ColumnHandler import ColumnHandler
-from CursedUtils.KeyResponses import KeyResponses
+from CursedUtils.KeyResponder import KeyResponder
 from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
