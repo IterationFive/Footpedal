@@ -31,6 +31,7 @@ class KeyResponder(object):
         
         self.responses = {}
         self.aliases = {}
+        self.disabled = {}
         
     def setResponse(self, key, action, passKeystroke=False, passKeyNumber=False, args=None, kwargs=None):
         '''
@@ -147,6 +148,7 @@ class KeyResponder(object):
         
         self.aliases.update( responder.aliases )
         self.responses.update( responder.responses )
+        self.disabled.update( responder.disabled )
     
     def reverseLookup(self, keyNumber):
         # produces character or mapstring from number
@@ -228,3 +230,16 @@ class KeyResponder(object):
         else:
             return -1 
         
+    def disableKey(self, key):
+        key = self.translateKey(key)
+        
+        if key in self.responses:
+            self.disabled[key] = self.responses[key]
+            del self.responses[key]
+        
+    def enableKey(self, key):
+        key = self.translateKey(key)
+        
+        if key in self.disabled:
+            self.responses[key] = self.disabled[key]
+            del self.disabled[key]
