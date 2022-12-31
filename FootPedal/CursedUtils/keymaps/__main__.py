@@ -53,7 +53,7 @@ class keyMapper(object):
                 keys.append( mod+chr(i) )
         for mod in ['', c,a,s]:
             for spec in ['','pad'] :
-                for key in ['enter','insert','delete','home','end','pageup','pagedown','up','down','left','right']:
+                for key in ['tab', 'enter','insert','delete','home','end','pageup','pagedown','up','down','left','right']:
                     keys.append( mod+spec+key )
         for mod in ['', c,s,a]: # there is no non-pad version of padcenter
             keys.append( mod+'padcenter' )
