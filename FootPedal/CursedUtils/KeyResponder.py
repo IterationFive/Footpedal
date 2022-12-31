@@ -93,7 +93,7 @@ class KeyResponder(object):
                 
             self.responses[key] = response
             
-    def clearResponse(self, key):        
+    def clearResponses(self, key):        
         if key in self.responses:
             del self.responses[key]
             
@@ -135,7 +135,10 @@ class KeyResponder(object):
         r.aliases = self.aliases.copy()
         
         for key in self.responses:
-            r.setResponse(key, **self.responses[key])
+            r.response[key] = self.responses[key].copy()
+        for key in self.disabled:
+            r.disabled[key] = self.disabled[key].copy()
+            
             
         return r
     
@@ -182,7 +185,7 @@ class KeyResponder(object):
                 arguments provided here will override arguments in repsonse['kwargs']
                 response['kwargs'] overrides nothing
                 
-            returns -1 if no response is defined
+            returns boolean indicating whether an action was executed
         '''
         
         if self.caseSensitive == False and key > 64 and key < 91: #A-Z are 65-90
@@ -224,11 +227,11 @@ class KeyResponder(object):
             elif response['passKey'] != True:
                 kwargs[response['passKey']] = self.reverseLookup(key) 
                 
-                
-            return response['action']( *args, **kwargs )
+            response['action']( *args, **kwargs )    
+            return True
             
         else:
-            return -1 
+            return False
         
     def disableKey(self, key):
         key = self.translateKey(key)
