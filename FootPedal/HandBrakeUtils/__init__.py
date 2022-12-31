@@ -1,3 +1,3 @@
-from FootPedal.HandBrakeUtils.process import hbProcess
-from FootPedal.HandBrakeUtils.queueManager import hbQueueManager
-from FootPedal.HandBrakeUtils.chyron import HandbrakeChyron
+from HandBrakeUtils.process import hbProcess
+from HandBrakeUtils.queueManager import hbQueueManager
+from HandBrakeUtils.chyron import HandbrakeChyron

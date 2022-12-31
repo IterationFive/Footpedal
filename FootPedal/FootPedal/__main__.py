@@ -3,11 +3,11 @@ Created on Dec 23, 2022
 
 @author: Cather Steincamp
 '''
-from FootPedal.lib.CrossThreaders import CrossThreadList
+from lib.CrossThreaders import CrossThreadList
 import os 
-from FootPedal.HandBrakeUtils import HandbrakeChyron
-from FootPedal.HandBrakeUtils import queueManager as qm
-from FootPedal.lib.ScreenWrapper import ScreenWrapper
+from HandBrakeUtils import HandbrakeChyron
+from HandBrakeUtils import queueManager as qm
+from lib.ScreenWrapper import ScreenWrapper
 from time import sleep
 
 
