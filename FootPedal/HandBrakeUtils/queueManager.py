@@ -203,10 +203,10 @@ class hbQueueManager(object):
             else:
                 guiPreset = self.guiPreset
                 
-                if 'destination' in job:
-                    destination = job['destination']
-                else:
-                    destination = self.destination
+            if 'destination' in job:
+                destination = job['destination']
+            else:
+                destination = self.destination
                 
             if 'srts' in job and len(job['srts']) != 0 :
                     
