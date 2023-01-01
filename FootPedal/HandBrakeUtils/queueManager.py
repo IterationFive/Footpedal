@@ -159,10 +159,10 @@ class hbQueueManager(object):
             elif runState == WAITING:
                 if self.queue.length() == 0 :
                     sleep( 0.25 )
+                    continue
                 else:
                     # what we were waiting for!
                     self.runState.set( RUNNING )
-                continue
             elif self.queue.length() == 0 :
                 # we're RUNNING But don't need to be anymore
                 self.runState.set(WAITING)
