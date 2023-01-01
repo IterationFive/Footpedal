@@ -3,14 +3,14 @@ Created on Dec 22, 2022
 
 @author: Cather Steincamp
 '''
-from FootPedal.lib import CrossThreadList, CrossThreadItem, CrossThreadDict
+from lib import CrossThreadList, CrossThreadItem, CrossThreadDict
 from FootPedal.config import paths as path
 from FootPedal.config import HandBrake as HB
 from time import sleep
 import re
 from shutil import copy2 as filecopy, move as filemove
 from os import remove as filedelete, rename as filerename
-from FootPedal.HandBrakeUtils import hbProcess
+from HandBrakeUtils import hbProcess
 from threading import Thread
 
 ''' 
