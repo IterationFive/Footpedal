@@ -3,19 +3,21 @@ Created on Dec 10, 2022
 
 @author: Cather Steincamp
 
-    Pwatch extends Popen, and has all of the same arguments excepting STDOUT, 
-    which is set to PIPE.  The default value for stderr has been changed to
-    STDOUT.  
+    Pwatch extends Popen, and provides methods for suspending, resuming, and 
+    monitoring the output of the process.
+    
+    It has all of the same arguments excepting STDOUT, which is fixed as PIPE.  
+    The default value for stderr has been changed to STDOUT.  
     
     IMPORTANT:  For reasons I have yet to ascertain, if 'stderr' is set to PIPE, 
-    the process locks when used for what I'm using it for.  I've left the code 
-    in place because damnit, it should work.
+    the process locks when used for what I'm using it for.  This happens with Popen, 
+    and not my code, so I've left the code in place because damnit, it should work.
     
-    NonitoredProcess adds the following properties.
+    NonitoredProcess adds the following attributes.
     
         errHandling       tracks if output has its own pipe
-        processing        tracks if output processing has completed
-        suspended         tracks if the process has been suspended
+        processing        tracks if output processing (rather than the process itself) has completed
+        suspended         tracks if the process is currently suspended
         
         runlock            threading.Lock()        
         process            a psutil Process() object for suspending and resuming the process
@@ -27,7 +29,9 @@ Created on Dec 10, 2022
     
         suspend()
         resume()    
-                    what it says on the tin
+                    suspends and resumes the process.  
+                    Note that you cannot suspend a process that has already completed,
+                    and that the processing of output itself is not suspended.
         
         isProcessing()    
                     returns boolean
@@ -35,13 +39,12 @@ Created on Dec 10, 2022
                     process itself has finished or has been terminated or suspended
                     
                     Use this instead of poll() to make sure you're waiting until 
-                    all data has processed.
+                    all output has been processed.
                     
         isSuspended()
                     returns boolean
                     speaks only to the suspended state, not whether the process
-                    has completed.  A completed process will not register
-                    as suspended.  
+                    has completed. 
                     
         errorMonitor()
                     runs in its own thread.  Processes output from STDERR and passes
@@ -62,6 +65,10 @@ Created on Dec 10, 2022
                     As mentioned above, these methods are called from outputMonitor() and
                     are used to process each line of STDOUT or STDERR.  In this class, 
                     they are empty, as they are there for the use of child classes.
+                    
+        overkill()
+                    bypass Popen's terminate() and kill() and uses psutil to get 
+                    the job done.
 '''
 
 from subprocess import Popen, PIPE, STDOUT
@@ -93,7 +100,7 @@ class Pwatch(Popen):
         
     def suspend(self):
         with self.runlock:
-            if self.suspended == False:
+            if self.suspended == False and self.poll() is None:
                 self.process.suspend()
                 self.suspended = True 
              
@@ -103,9 +110,7 @@ class Pwatch(Popen):
                 self.process.resume()
                 self.suspended = False 
                 
-    def murder(self):
-        # for those days when terminate() and kill() 
-        # aren't getting the job done
+    def overkill(self):
         self.process.kill()
     
     def isProcessing(self):
