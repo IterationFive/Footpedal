@@ -12,7 +12,7 @@ class KeyResponder(object):
     '''
 
 
-    def __init__(self, translateNumpad=True, caseSensitive=False):
+    def __init__(self, activateKeypad=True, translateNumpad=True, caseSensitive=False):
         '''
             translateNumpad
                 determines if the numpad version of the keys will be treated the
@@ -23,6 +23,7 @@ class KeyResponder(object):
                 If true, all uppercase characters will be translated to lowercase when assigned,
                 and the keyProcessor 
         '''
+        self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
         self.caseSensitive=caseSensitive
         
@@ -79,7 +80,7 @@ class KeyResponder(object):
                 
         if key != False:
             
-            if self.caseSensitive == False and key > 64 and key < 91 : #65-90 is A-Z
+            if key != 'default' and self.caseSensitive == False and key > 64 and key < 91 : #65-90 is A-Z
                 key += 32 
             
             response = { 'action': action  }
