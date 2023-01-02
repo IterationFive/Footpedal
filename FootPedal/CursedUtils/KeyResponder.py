@@ -74,7 +74,8 @@ class KeyResponder(object):
                             
         '''
         
-        key = self.translateKey(key)
+        if key != 'default':
+            key = self.translateKey(key)
                 
         if key != False:
             
@@ -207,7 +208,6 @@ class KeyResponder(object):
         if response != False:
             
             if 'args' in response:
-                print( 'we got args' )
                 args = response['args']
                 args.extend( moreargs )
             else:
@@ -233,7 +233,6 @@ class KeyResponder(object):
                 elif response['passKeystroke'] != True:
                     kwargs[response['passKeystroke']] = self.reverseLookup(key) 
                     
-            print( response, args, kwargs )
                 
             response['action']( *args, **kwargs )    
             return True
