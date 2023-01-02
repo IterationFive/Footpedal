@@ -12,10 +12,8 @@ class KeyResponder(object):
     '''
 
 
-    def __init__(self, activateKeypad=True, translateNumpad=True, caseSensitive=False):
+    def __init__(self, translateNumpad=True, caseSensitive=False):
         '''
-            activateKeypad
-                determines if the keystroke handler will set window.keypad( True )
             translateNumpad
                 determines if the numpad version of the keys will be treated the
                 same as their counterparts
@@ -25,9 +23,11 @@ class KeyResponder(object):
                 If true, all uppercase characters will be translated to lowercase when assigned,
                 and the keyProcessor 
         '''
-        self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
         self.caseSensitive=caseSensitive
+        
+        self.lastKeyNumber = False
+        self.lastKeystroke = False
         
         self.responses = {}
         self.aliases = {}
@@ -187,6 +187,8 @@ class KeyResponder(object):
                 response['kwargs'] overrides nothing
                 
             returns boolean indicating whether an action was executed
+            
+            sets self.lastKeynumber and self.lastKeystroke if an action is executed
         '''
         
         if self.caseSensitive == False and key > 64 and key < 91: #A-Z are 65-90
@@ -203,42 +205,38 @@ class KeyResponder(object):
         elif 'default' in self.responses:
             response =  self.responses['default']
         else:
-            response = False
-            
-        if response != False:
-            
-            if 'args' in response:
-                args = response['args']
-                args.extend( moreargs )
-            else:
-                args = moreargs.copy()
-                
-                
-            
-            if 'kwargs' in response:
-                kwargs = response['kwargs'].copy()
-                kwargs.update( morekwargs )
-            else:
-                kwargs = morekwargs
-            
-            if 'passKeyNumber' in response:
-                if response['passKeyNumber'] ==True:
-                    args.insert( 0,  key)
-                elif response['passKeyNumber'] != False:
-                    kwargs[response['passKeyNumber']] = key
-                    
-            if 'passKeystrone' in response:
-                if response['passKeystroke'] == True:
-                    args.insert( 0, self.reverseLookup(key))
-                elif response['passKeystroke'] != True:
-                    kwargs[response['passKeystroke']] = self.reverseLookup(key) 
-                    
-                
-            response['action']( *args, **kwargs )    
-            return True
-            
-        else:
             return False
+            
+        if 'args' in response:
+            args = response['args']
+            args.extend( moreargs )
+        else:
+            args = moreargs.copy()            
+            
+        
+        if 'kwargs' in response:
+            kwargs = response['kwargs'].copy()
+            kwargs.update( morekwargs )
+        else:
+            kwargs = morekwargs
+        
+        if 'passKeyNumber' in response:
+            if response['passKeyNumber'] ==True:
+                args.insert( 0,  key)
+            elif response['passKeyNumber'] != False:
+                kwargs[response['passKeyNumber']] = key
+                
+        if 'passKeystrone' in response:
+            if response['passKeystroke'] == True:
+                args.insert( 0, self.reverseLookup(key))
+            elif response['passKeystroke'] != True:
+                kwargs[response['passKeystroke']] = self.reverseLookup(key) 
+                
+        self.lastKeyNumber = key
+        self.lastKeystroke = self.reverseLookup(key)
+        response['action']( *args, **kwargs )    
+        return True
+            
         
     def disableKey(self, key):
         key = self.translateKey(key)
