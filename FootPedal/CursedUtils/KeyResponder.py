@@ -33,7 +33,7 @@ class KeyResponder(object):
         self.aliases = {}
         self.disabled = {}
         
-    def setResponse(self, key, action, passKeystroke=False, passKeyNumber=False, args=None, kwargs=None):
+    def setResponse(self, key, action, passKeystroke=False, passKeyNumber=False, args=[], kwargs={}):
         '''
             key
                 the number, character, or special string corresponding to the keystroke 
@@ -82,14 +82,14 @@ class KeyResponder(object):
                 key += 32 
             
             response = { 'action': action  }
+            
             if passKeystroke != False:
                 response['passKeystroke'] = passKeystroke
             if passKeyNumber != False:
                 response['passKeyNumber'] = passKeyNumber
-            if args is not None:
-                response['args'] = args
-            if kwargs is not None:
-                response['kwargs'] = kwargs
+                
+            response['args'] = args
+            response['kwargs'] = kwargs
                 
             self.responses[key] = response
             
@@ -207,9 +207,13 @@ class KeyResponder(object):
         if response != False:
             
             if 'args' in response:
-                args = response['args'].extend( moreargs )
+                print( 'we got args' )
+                args = response['args']
+                args.extend( moreargs )
             else:
                 args = moreargs.copy()
+                
+                
             
             if 'kwargs' in response:
                 kwargs = response['kwargs'].copy()
@@ -217,15 +221,19 @@ class KeyResponder(object):
             else:
                 kwargs = morekwargs
             
-            if response['passNumber'] ==True:
-                args.insert( 0,  key)
-            elif response['passNumber'] != False:
-                kwargs[response['passNumber']] = key
-                
-            if response['passKey'] == True:
-                args.insert( 0, self.reverseLookup(key))
-            elif response['passKey'] != True:
-                kwargs[response['passKey']] = self.reverseLookup(key) 
+            if 'passKeyNumber' in response:
+                if response['passKeyNumber'] ==True:
+                    args.insert( 0,  key)
+                elif response['passKeyNumber'] != False:
+                    kwargs[response['passKeyNumber']] = key
+                    
+            if 'passKeystrone' in response:
+                if response['passKeystroke'] == True:
+                    args.insert( 0, self.reverseLookup(key))
+                elif response['passKeystroke'] != True:
+                    kwargs[response['passKeystroke']] = self.reverseLookup(key) 
+                    
+            print( response, args, kwargs )
                 
             response['action']( *args, **kwargs )    
             return True
