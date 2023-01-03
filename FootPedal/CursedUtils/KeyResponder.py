@@ -8,127 +8,186 @@ from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
 
 class KeyResponder(object):
     '''
-    This class is defined to simplify the use of keys in curses.
+    This class is defined to simplify keyboard input under curses, by providing tools 
+    to define and manage a set of responses to the use of specific keys and/or a
+    default response for keys that are not otherwise defined.  Additionally, it 
+    provides several ways to use these responses in your code.
     
-    Additional documentation is available with the methods,
-    but this section will provide an overview to place the
-    functions in the context of the whole.
+    Unless otherwise specified, when configuring a key, one can use either the 
+    number that is returned for that key by curses' window.getch(), a single-character
+    string representing the key pressed ( e.g. 'a', '!', '5' ), or for non-character 
+    keys, the imported KEYMAP provides special strings ( e.g. 'escape','pagedown',
+    'backspace', 'padenter' ).
     
-    A response can be assigned to any keystroke by number or using 
-    the keys of the imported KEYMAP, and is basically a dictionary 
-    containing an action-- which is a function or method-- and any
-    positional or keyword arguments.  
-    
-    The number of the key pressed or a string representation can be 
-    passed to the action as a positional or keyword argument if
-    so specified during assignment.  Additional positional and/or 
-    keyword arguments can also be provided during assignment.
-    
-    Aliases can be configured for situations where you want the 
-    system to respond to one key as if you pressed another key-- 
-    for example, if you want only certain letters to be case 
-    insensitve.  If you set 'A' as an alias to 'a', then anytime 
-    you press A, this class will interpret it as 'a'.  It is 
-    important to note that if you do this, there will be no way
-    to determine which of the two keys was pressed.  If you 
-    need that kind of granularity, assign the same response to
-    both keys and pass the key to the action.
-    
-    Assignments can be disabled without being deleted, allowing
-    one to define a wide range of responses that can easily be
-    enabled and disabled as needed.
-    
-    The constructor has three arguments:
+    The constructor has three boolean arguments:
             
         caseSensitive
-            determines if uppercase letters are treated as different 
-            input that their lowercase counterparts.  If true, all 
-            uppercase characters will be translated to lowercase when 
-            assigned or processed. 
+            determines if uppercase letters are treated as different input that their 
+            lowercase counterparts.  If True, all uppercase characters will be translated 
+            to lowercase when assigned or processed. Defaults to False.
     
         activateKeypad
-            boolean
-            by default, curses' window.getch() does not look for
-            keys like home, end, insert, left, pagedown, etc.
-            by default, this class DOES, but you can turn
-            it off by setting this to False.  Don't know why
-            you would, but why take away an option?
+            By default, curses' window.getch() does not look for keys like home, end, 
+            insert, left, pagedown, etc.
+            By default, this class DOES, but you can turn it off by setting this to False.  
     
         translateNumpad
-            by default curses' window.getch() treats
-            the versions of the keypad keys that
-            are accessible by turning off numlock
-            as different keystrokes.
-            by default, this class doesn't, but you
-            can set this to False to get that back.
-
-            Uses PADTRANSLATOR from the keymap file.
-    
-    There are three ways to get and process a keystroke.  All three
-    give the ability to provide additional positional or keyword 
-    arguments that can be passed to ALL responses.  
-    
-      
-    keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
-    
-        This continues processing keystrokes until the key defined 
-        as 'exitKey' (by default, 'escape') is pressed.  
-        
-        Additionaly, if the action has access to this object,
-        it can set the property keepLooping to False to 
-        break the loop.  The flag will be reset the next
-        time this method is executed.
-        
-        window 
-            a curses window object or an encapsulating object
-            with the methods getch(), nodelay(), and keypad().
-        
-        exitKey
-            see above.  can be defined with the number or keymap key, 
-            or as a list of either.
-        
-        iterator
-            optional. if provided, will run when a key is NOT pressed.
+            by default curses' window.getch() treats the numpad keys-- the versions of the keypad keys that
+            are accessible by turning off numlock-- as different keystrokes.
+            by default, this class doesn't, but you can set this to False to get that back.
             
-        any additional arguments or keyword arguments will be passed 
-        to the action and/or, if provided, the iterator.
-        
-    keyRespond(  window, nodelay, *moreargs, **morekwargs )
-    
-        This responds to a single keypress, and can be used 
-        when you want more control over a loop than provided
-        by keyLoop.  
-        
-        Will activate the keypad keys if desired.
-        
-        Returns True if an action ws triggered, False if a key
-        was pressed but no action was triggered, and -1 if no 
-        key was pressed (and nodelay was set to True).
-    
-        window
-            a curses window object or an encapsulating object
-            with the methods getch(), nodelay(), and keypad().
-        
-        nodelay
-            boolean.  is passed to the window.nodelay() method.
-            If False, will wait for a keypress.
-            If True, will return -1 if no key is pressed.
+            When this is False, the numpad keys can be differentiated from their counterparts
+            by number or by adding 'pad' to the beginning of the string (e.g. 'padleft', 'padinsert')
             
-        any additional arguments or keyword arguments will be passed 
-        to the action.    
+            When true, keys are converted at processing using the imported PADTRANSLATOR
+            
+            
+    Use self.setResponse() to define a response to a given key.  The parameters are:
+     
+        key
+            the number, character, or keymap string corresponding to the keystroke to which we 
+            want to respond, or 'default'
+            
+        action
+            the function (passed as reference!) to run when they key is pressed
+            
+        passKeystroke
+            if True, will pass the character or keymap string to the action
+            as the first parameter
+            
+            if a string, will pass it as a keyword argument, using the provided string as the keyword
+            
+        passKeyNumber
+            if True, will pass the number corresponding to the keystroke as the first parameter 
+            (or second, if for some reason you're using passKeystroke as well)
+            
+            if a string, will pass it as a keyword argument, using the provided string as the keyword            
+            
+        args 
+            list or None
+            Any arguments here will be passed to the action in the order provided.  If passKeystroke or 
+            passKeynumber is True, then those arguments will come first.
+            
+        kwargs
+            dict or None
+            This dictionary (if present) will be passed to the action as keyword arguments. Note that 
+            any of the keywords in this dictionary that conflict with a keyword used for
+            passKeystroke or passKeynumber will be ignored in favor of the key. 
+            
+    Assigned responses can be managed with the following functions:
         
-    respond( key,  *moreargs, **morekwargs )
+        clearResponse( key )
+            permanently removes the response assigned to the key.
+        
+        disableResponse( key )
+            moves the response to the disabled dictionary, where it can be easily enabled with...
+            
+        enableResponse( key )
+            ...which moves the response back into the dictionary of responses
+            
+    If a response is on the disabled list, it is possible to assign another response to the
+    same key, and then overwrite the new response by re-enabling the key.  (Alternately, if 
+    you disable a key while there is a response already disabled, it will overwrite the disabled response.)
     
-        This is actually called by both of the above methods,
-        and does not actually look for the keystroke-- it
-        just responds to a number.  This is the ultimate
-        build-your-own-code block, but be advised that, since
-        it does not actually interact with the window, 
-        it does not activate the keypad keys.
+    Additionally, one can set up aliases, which causes the system to recognize one keypress 
+    as another.  Applications of this include assigning multiple keys to do the exact same thing,
+    or setting certain characters to be case insensitive without making it a global setting. 
         
-        if the value of key is a key that has a repsonse,
-        the key will be stored as the number in the attribute
-        'lastKeyNumber' and as a string in 'lastKeystroke'.
+        setAlias( pressThisKey, butReportThisKey )
+            I have never been prouder of a set of variable names.  
+            
+        clearAlias( key )
+            where 'key' is the key from 'pressThisKey'
+        
+    Once an alias is assigned, this class will not be able to distinguish between the key pressed
+    and the alias assigned to it.  Any response assigned to 'pressThisKey' will be ignored.
+    
+    In order to prevent management of a single object from getting out of hand, the recommended 
+    practice is to create multiple objects for each context.  The following methods exist to 
+    help reinventing-- or more accurately-- reconfiguring the wheel.
+    
+        copy()
+            returns a new instance  that is identical, but independent-- changes made to one will
+            not be reflected in the other.
+        merge( keyResponder )
+            takes the assigned and disabled responses from another instance and copies them
+            into itself via dict.update(), with all the overwriting that implies.
+            
+    There are two (and a half) ways of processing keystrokes.  All of them have the capacity to provide
+    additional positional or keyword arguments.  It is important to note that while positional arguments
+    provided here will follow any arguments provided at assignment, keyword arguments can potentially
+    override keyword arguments provided at assignment.  The exception(s) to this are the keywords (if 
+    any) provided to pass the keynumber ot key string along to the action, which will override 
+    anything else.
+    
+            keyRespond(  window, nodelay, *moreargs, **morekwargs )
+            
+                window
+                    a curses window object or an encapsulating object with the methods 
+                    getch(), nodelay(), and keypad().
+                
+                nodelay
+                    boolean.  is passed to the window.nodelay() method.
+                    If False, will wait for a keypress.
+                    If True, will return -1 if no key is pressed.
+                                
+                responds to a single keypress (or, optionally, the lack thereof).
+                
+                Will activate the keypad keys as configured.
+                
+                Returns True if an action was triggered, False if a key was pressed but no action was 
+                triggered, and -1 if no key was pressed (and nodelay was set to True).
+            
+            
+            keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
+                
+                window 
+                    a curses window object or an encapsulating object
+                    with the methods getch(), nodelay(), and keypad().
+                
+                exitKey
+                    default is 27 ('escape')
+                    a single key, or a list of keys, that will terminate 
+                    the loop.  Not that actions can still be assigned to
+                    an exitKey, and will be executed before the loop
+                    is terminated.
+                
+                iterator
+                    optional method or function. if provided, will run when a key is NOT pressed.
+            
+                This continues processing keystrokes until the key defined as 'exitKey' (by 
+                default, 'escape') is pressed.  
+                
+                Will activate the keypad keys as configured.
+                
+                Additionaly, if an action has access to this object, it can set the attribute 
+                'keepLooping' to False to break the loop.  The flag will be reset the next
+                time this method is executed.
+            
+            respond( key, *moreargs, **morekwargs )
+            
+                This one is the 'half', as it does not have the ability to activate 
+                the keypad keys, nor does it actually monitor for a keypress.  This 
+                method is mostly something for the other two to use, but it's here if
+                you wanted to, for example, run a single keystroke through multiple
+                keyResponder instances until you get a match.
+                
+                'key', in this case, is SPECIFICALLY the number of the key that
+                has been pressed.  
+                
+                returns True if an action was triggered, False if not.
+                
+                
+                
+                
+                == lastKeystroke.  Dude, clean that up (add a retrieval) 
+    
+    
+    
+    
+    
+    
+    
             
     
     '''
@@ -140,53 +199,13 @@ class KeyResponder(object):
         self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
         
-        self.lastKeyNumber = False
-        self.lastKeystroke = False
+        self.lastKey = False
         
         self.responses = {}
         self.aliases = {}
         self.disabled = {}
         
     def setResponse(self, key, action, passKeystroke=False, passKeyNumber=False, args=[], kwargs={}):
-        '''
-            key
-                the number, character, or special string corresponding to the keystroke 
-                to which we want to respond, or 'default'
-            action
-                the function (passed as reference!) to run when they key is pressed
-                
-            passKeystroke
-                if True, will pass the character or special string to the action
-                as the first parameter
-                
-                if a string, will pass it as a keyword argument, using the 
-                string as the keyword
-                
-            passKeyNumber
-                if True, will pass the number corresponding to the keystroke as 
-                the first parameter (or second, if for some reason you're using
-                passKeystroke as well)
-                
-                if a string, will pass it as a keyword argument, using the 
-                string as the keyword
-                
-                
-            args 
-                list or None
-                Any arguments here will be passed to the action in the order
-                provided.  If passKeystroke or PassKeynumber is True,
-                then these arguments will come after those.
-            kwargs
-                dict or None
-                This dictionary (if present) will be passed to the action
-                as keyword arguments.
-                
-                IMPORTANT NOTE: any kwargs in this dictionary can be overwritten
-                by the kwargs provided by passKeystroke, passKeyNumber, or
-                the keystroke Handler itself.
-                
-                            
-        '''
         
         if key != 'default':
             key = self.translateKey(key)
@@ -240,6 +259,12 @@ class KeyResponder(object):
         
         if pressThisKey != False and butReportThisKey != False:
             self.aliases[pressThisKey] = butReportThisKey
+            
+    def clearAlias(self, key):
+        
+        key = self.translateKey(key)
+        if key in self.aliases:
+            del self.aliases[key]
             
     def copy(self):
         '''
@@ -316,7 +341,7 @@ class KeyResponder(object):
                 
             returns boolean indicating whether an action was executed
             
-            sets self.lastKeynumber and self.lastKeystroke if an action is executed
+            sets self.lastKey if an action is executed
         '''
         
         if self.caseSensitive == False and key > 64 and key < 91: #A-Z are 65-90
@@ -360,8 +385,7 @@ class KeyResponder(object):
             elif response['passKeystroke'] != True:
                 kwargs[response['passKeystroke']] = self.reverseLookup(key) 
                 
-        self.lastKeyNumber = key
-        self.lastKeystroke = self.reverseLookup(key)
+        self.lastKey = key
         response['action']( *args, **kwargs )    
         return True
     
@@ -424,7 +448,15 @@ class KeyResponder(object):
                 iterator( *moreargs, **morekwargs)
                 
             
+    def getLastKey(self, convert=True):
         
+        if self.lastKey == False:
+            return False
+        
+        if convert:
+            return self.translateKey(self.lastKey)
+        else:
+            return self.lastKey
         
         
         
