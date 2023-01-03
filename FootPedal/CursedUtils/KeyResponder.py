@@ -415,7 +415,7 @@ class KeyResponder(object):
             key = window.getch()
             
             if key != -1:
-                self.respond(key, *moreargs **morekwargs)
+                self.respond(key, *moreargs, **morekwargs)
                 
                 if key == exitKey or ( type( exitKey) == list and key in exitKey ):
                     break
