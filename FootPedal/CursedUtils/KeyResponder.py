@@ -120,67 +120,67 @@ class KeyResponder(object):
     any) provided to pass the keynumber ot key string along to the action, which will override 
     anything else.
     
-            keyRespond(  window, nodelay, *moreargs, **morekwargs )
+        keyRespond(  window, nodelay, *moreargs, **morekwargs )
+        
+            window
+                a curses window object or an encapsulating object with the methods 
+                getch(), nodelay(), and keypad().
             
-                window
-                    a curses window object or an encapsulating object with the methods 
-                    getch(), nodelay(), and keypad().
-                
-                nodelay
-                    boolean.  is passed to the window.nodelay() method.
-                    If False, will wait for a keypress.
-                    If True, will return -1 if no key is pressed.
-                                
-                responds to a single keypress (or, optionally, the lack thereof).
-                
-                Will activate the keypad keys as configured.
-                
-                Returns True if an action was triggered, False if a key was pressed but no action was 
-                triggered, and -1 if no key was pressed (and nodelay was set to True).
+            nodelay
+                boolean.  is passed to the window.nodelay() method.
+                If False, will wait for a keypress.
+                If True, will return -1 if no key is pressed.
+                            
+            responds to a single keypress (or, optionally, the lack thereof).
             
+            Will activate the keypad keys as configured.
             
-            keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
-                
-                window 
-                    a curses window object or an encapsulating object
-                    with the methods getch(), nodelay(), and keypad().
-                
-                exitKey
-                    default is 27 ('escape')
-                    a single key, or a list of keys, that will terminate 
-                    the loop.  Not that actions can still be assigned to
-                    an exitKey, and will be executed before the loop
-                    is terminated.
-                
-                iterator
-                    optional method or function. if provided, will run when a key is NOT pressed.
+            Returns True if an action was triggered, False if a key was pressed but no action was 
+            triggered, and -1 if no key was pressed (and nodelay was set to True).
+        
+        
+        keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
             
-                This continues processing keystrokes until the key defined as 'exitKey' (by 
-                default, 'escape') is pressed.  
-                
-                Will activate the keypad keys as configured.
-                
-                Additionaly, if an action has access to this object, it can set the attribute 
-                'keepLooping' to False to break the loop.  The flag will be reset the next
-                time this method is executed.
+            window 
+                a curses window object or an encapsulating object
+                with the methods getch(), nodelay(), and keypad().
             
-            respond( key, *moreargs, **morekwargs )
+            exitKey
+                default is 27 ('escape')
+                a single key, or a list of keys, that will terminate 
+                the loop.  Not that actions can still be assigned to
+                an exitKey, and will be executed before the loop
+                is terminated.
             
-                This one is the 'half', as it does not have the ability to activate 
-                the keypad keys, nor does it actually monitor for a keypress.  This 
-                method is mostly something for the other two to use, but it's here if
-                you wanted to, for example, run a single keystroke through multiple
-                keyResponder instances until you get a match.
-                
-                'key', in this case, is SPECIFICALLY the number of the key that
-                has been pressed.  
-                
-                returns True if an action was triggered, False if not.
-                
-                
-                
-                
-                == lastKeystroke.  Dude, clean that up (add a retrieval) 
+            iterator
+                optional method or function. if provided, will run when a key is NOT pressed.
+        
+            This continues processing keystrokes until the key defined as 'exitKey' (by 
+            default, 'escape') is pressed.  
+            
+            Will activate the keypad keys as configured.
+            
+            Additionaly, if an action has access to this object, it can set the attribute 
+            'keepLooping' to False to break the loop.  The flag will be reset the next
+            time this method is executed.
+        
+        respond( key, *moreargs, **morekwargs )
+            
+            'key', in this case, is SPECIFICALLY the number of the key that
+            has been pressed. 
+            
+            This one is the 'half', as it does not have the ability to activate 
+            the keypad keys, nor does it actually monitor for a keypress.  This 
+            method is mostly something for the other two to use, but it's here if
+            you wanted to, for example, run a single keystroke through multiple
+            keyResponder instances until you get a match. 
+            
+            If an action was triggered, the number of the key will be stored 
+            as self.lastKey and True will be returned.  If not, False will be 
+            returned and self.lastKey will not be modified.
+    
+    The last key that triggered an action can be accessed with self.getLastKey().  If you 
+    want the key converted to a string, run self.getLastKey(True).
     
     
     
