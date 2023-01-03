@@ -103,22 +103,22 @@ class KeyResponder(object):
     and the alias assigned to it.  Any response assigned to 'pressThisKey' will be ignored.
     
     In order to prevent management of a single object from getting out of hand, the recommended 
-    practice is to create multiple objects for each context.  The following methods exist to 
+    practice is to create separate objects for each context.  The following methods exist to 
     help reinventing-- or more accurately-- reconfiguring the wheel.
     
         copy()
-            returns a new instance  that is identical, but independent-- changes made to one will
-            not be reflected in the other.
+            returns a new instance that is identical to itself, but independent-- changes made 
+            to one will not be reflected in the other.
         merge( keyResponder )
-            takes the assigned and disabled responses from another instance and copies them
-            into itself via dict.update(), with all the overwriting that implies.
+            takes the assigned and disabled responses as well as the aliases from another instance 
+            and copies them into itself via dict.update(), with all the overwriting that implies.
             
-    There are two (and a half) ways of processing keystrokes.  All of them have the capacity to provide
-    additional positional or keyword arguments.  It is important to note that while positional arguments
-    provided here will follow any arguments provided at assignment, keyword arguments can potentially
-    override keyword arguments provided at assignment.  The exception(s) to this are the keywords (if 
-    any) provided to pass the keynumber ot key string along to the action, which will override 
-    anything else.
+    There are two (and a half) ways of actually processing keystrokes.  All of them have the capacity 
+    to provide additional positional or keyword arguments.  It is important to note that while positional 
+    arguments provided here will follow any arguments provided at assignment, keyword arguments can 
+    potentially override keyword arguments provided at assignment.  The exception(s) to this are the 
+    keywords (if any) provided to pass the keynumber ot key string along to the action, which will 
+    override anything else.
     
         keyRespond(  window, nodelay, *moreargs, **morekwargs )
         
@@ -133,7 +133,7 @@ class KeyResponder(object):
                             
             responds to a single keypress (or, optionally, the lack thereof).
             
-            Will activate the keypad keys as configured.
+            Will activate or deactivate the keypad according to self.activateKeypad.
             
             Returns True if an action was triggered, False if a key was pressed but no action was 
             triggered, and -1 if no key was pressed (and nodelay was set to True).
@@ -142,23 +142,25 @@ class KeyResponder(object):
         keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
             
             window 
-                a curses window object or an encapsulating object
-                with the methods getch(), nodelay(), and keypad().
+                a curses window object or an encapsulating object with the methods 
+                getch(), nodelay(), and keypad().
             
             exitKey
                 default is 27 ('escape')
-                a single key, or a list of keys, that will terminate 
-                the loop.  Not that actions can still be assigned to
-                an exitKey, and will be executed before the loop
+                a single key, or a list of keys, that will terminate the loop.  Note that 
+                actions can still be assigned to an exitKey, and will be executed before the loop
                 is terminated.
+                
+                if you don't actually want an exit key, simply assign this a negative number or False, 
+                but that's something you should CHOOSE so it's not the default
             
             iterator
                 optional method or function. if provided, will run when a key is NOT pressed.
+                the iterator will receive any arguments provided by *moreargs and/or **morekwargs.
         
-            This continues processing keystrokes until the key defined as 'exitKey' (by 
-            default, 'escape') is pressed.  
+            This continues processing keystrokes until the key defined as 'exitKey' is pressed.  
             
-            Will activate the keypad keys as configured.
+            Will activate or deactivate the keypad according to self.activateKeypad.
             
             Additionaly, if an action has access to this object, it can set the attribute 
             'keepLooping' to False to break the loop.  The flag will be reset the next
@@ -166,29 +168,18 @@ class KeyResponder(object):
         
         respond( key, *moreargs, **morekwargs )
             
-            'key', in this case, is SPECIFICALLY the number of the key that
-            has been pressed. 
+            'key', in this case, is SPECIFICALLY the number of the key that has been pressed. 
             
-            This one is the 'half', as it does not have the ability to activate 
-            the keypad keys, nor does it actually monitor for a keypress.  This 
-            method is mostly something for the other two to use, but it's here if
-            you wanted to, for example, run a single keystroke through multiple
-            keyResponder instances until you get a match. 
+            This one is the 'half', as it does not have the ability to activate the keypad keys, nor 
+            does it actually monitor for a keypress.  This method is mostly something for the other 
+            two to use, but it's here if you wanted to, for example, run a single keystroke through 
+            multiple keyResponder instances until you get a match. 
             
-            If an action was triggered, the number of the key will be stored 
-            as self.lastKey and True will be returned.  If not, False will be 
-            returned and self.lastKey will not be modified.
+            If an action was triggered, the number of the key will be stored as self.lastKey and 
+            True will be returned.  If not, False will be returned and self.lastKey will not be modified.
     
     The last key that triggered an action can be accessed with self.getLastKey().  If you 
-    want the key converted to a string, run self.getLastKey(True).
-    
-    
-    
-    
-    
-    
-    
-            
+    want the key converted to a string, use self.getLastKey(True).        
     
     '''
 
