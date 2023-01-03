@@ -9,20 +9,123 @@ from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
 class KeyResponder(object):
     '''
     This class is defined to simplify the use of keys in curses.
+    
+    Additional documentation is available with the methods,
+    but this section will provide an overview to place the
+    functions in the context of the whole.
+    
+    A response can be assigned to any keystroke by number or using 
+    the keys of the imported KEYMAP, and is basically a dictionary 
+    containing an action-- which is a function or method-- and any
+    positional or keyword arguments.  
+    
+    The number of the key pressed or a string representation can be 
+    passed to the action as a positional or keyword argument if
+    so specified during assignment.  Additional positional and/or 
+    keyword arguments can also be provided during assignment.
+    
+    Aliases can be configured for situations where you want the 
+    system to respond to one key as if you pressed another key-- 
+    for example, if you want only certain letters to be case 
+    insensitve.  If you set 'A' as an alias to 'a', then anytime 
+    you press A, this class will interpret it as 'a'.  It is 
+    important to note that if you do this, there will be no way
+    to determine which of the two keys was pressed.  If you 
+    need that kind of granularity, assign the same response to
+    both keys and pass the key to the action.
+    
+    Assignments can be disabled without being deleted, allowing
+    one to define a wide range of responses that can easily be
+    enabled and disabled as needed.
+    
+    The constructor has three arguments:
+            
+        caseSensitive
+            determines if uppercase letters are treated as different 
+            input that their lowercase counterparts.  If true, all 
+            uppercase characters will be translated to lowercase when 
+            assigned or processed. 
+    
+        activateKeypad
+            boolean
+            by default, curses' window.getch() does not look for
+            keys like home, end, insert, left, pagedown, etc.
+            by default, this class DOES, but you can turn
+            it off by setting this to False.
+    
+        translateNumpad
+            determines if the numpad version of the keys will be 
+            treated the same as their counterparts.
+    
+    There are three ways to get and process a keystroke.  All three
+    give the ability to provide additional positional or keyword 
+    arguments that can be passed to ALL responses.  
+    
+      
+    keyLoop(window, exitKey, iterator, *moreargs, **morekwargs) 
+    
+        This continues processing keystrokes until the key defined 
+        as 'exitKey' (by default, 'escape') is pressed.  
+        
+        Additionaly, if the action has access to this object,
+        it can set the property keepLooping to False to 
+        break the loop.  The flag will be reset the next
+        time this method is executed.
+        
+        window 
+            a curses window object or an encapsulating object
+            with the methods getch(), nodelay(), and keypad().
+        
+        exitKey
+            see above.  can be defined with the number or keymap key.
+        
+        iterator
+            optional. if provided, will run when a key is NOT pressed.
+            
+        any additional arguments or keyword arguments will be passed 
+        to the action and/or, if provided, the iterator.
+        
+    keyRespond(  window, nodelay, *moreargs, **morekwargs )
+    
+        This responds to a single keypress, and can be used 
+        when you want more control over a loop than provided
+        by keyLoop.  
+        
+        Will activate the keypad keys if desired.
+        
+        Returns True if an action ws triggered, False if a key
+        was pressed but no action was triggered, and -1 if no 
+        key was pressed (and nodelay was set to True).
+    
+        window
+            a curses window object or an encapsulating object
+            with the methods getch(), nodelay(), and keypad().
+        
+        nodelay
+            boolean.  is passed to the window.nodelay() method.
+            If False, will wait for a keypress.
+            If True, will return -1 if no key is pressed.
+            
+        any additional arguments or keyword arguments will be passed 
+        to the action.    
+        
+    respond( key,  *moreargs, **morekwargs )
+    
+        This is actually called by both of the above methods,
+        and does not actually look for the keystroke-- it
+        responds to a number.  
+        
+        Unlike the above methods, respond() does not activate 
+        the keypad keys.  
+            
+    
+    
+    
     '''
 
 
-    def __init__(self, activateKeypad=True, translateNumpad=True, caseSensitive=False):
-        '''
-            translateNumpad
-                determines if the numpad version of the keys will be treated the
-                same as their counterparts
-            caseSensitive
-                determines if uppercase letters are treated as different input that their lowercase
-                counterparts
-                If true, all uppercase characters will be translated to lowercase when assigned,
-                and the keyProcessor 
-        '''
+    def __init__(self, caseSensitive=False, activateKeypad=True, translateNumpad=True):
+
         self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
         self.caseSensitive=caseSensitive
@@ -162,7 +265,21 @@ class KeyResponder(object):
             if keyNumber == KEYMAP[i]:
                 return i
             
-        return( chr( keyNumber ))
+        return( chr( keyNumber ))            
+        
+    def disableKey(self, key):
+        key = self.translateKey(key)
+        
+        if key in self.responses:
+            self.disabled[key] = self.responses[key]
+            del self.responses[key]
+        
+    def enableKey(self, key):
+        key = self.translateKey(key)
+        
+        if key in self.disabled:
+            self.responses[key] = self.disabled[key]
+            del self.disabled[key]
             
     def respond(self, key, *moreargs, **morekwargs):
         '''
@@ -227,7 +344,7 @@ class KeyResponder(object):
             elif response['passKeyNumber'] != False:
                 kwargs[response['passKeyNumber']] = key
                 
-        if 'passKeystrone' in response:
+        if 'passKeystroke' in response:
             if response['passKeystroke'] == True:
                 args.insert( 0, self.reverseLookup(key))
             elif response['passKeystroke'] != True:
@@ -237,18 +354,65 @@ class KeyResponder(object):
         self.lastKeystroke = self.reverseLookup(key)
         response['action']( *args, **kwargs )    
         return True
+    
+    def keyRespond(self, window, nodelay=False, *moreargs, **morekwargs):
+        '''
+        actually checks for the keypress itself, and then passes that response
+        on to response().
+        
+        activates the keypad if self.activateKeypad is true.
+        
+        if nodelay is False, will wait for a keypress, and will return False 
+        if they key pressed does not have a response.  Will return True if a response
+        is triggered (including 'default').
+        
+        if nodelay is True, will not wait for a keypress.  Will return -1 if
+        no key is pressed, or False if the key pressed does not have a response. Will 
+        return True if a response is triggered (including 'default').
+        '''
+        
+        window.nodelay(nodelay)
+        window.keypad( self.activateKeypad)
+        
+        key = window.getch()
+        
+        if key == -1:
+            return -1
+        
+        return self.respond(key, *moreargs, **morekwargs)
+        
+    def keyLoop(self, window, exitKey=27, iterator=None, *moreargs, **morekwargs ):
+        
+        exitKey = self.translateKey(exitKey)
+        window.keypad( self.activateKeypad)
+        
+        
+        if iterator is not None:
+            window.nodelay( True )
+        else:
+            window.nodelay( False )
             
         
-    def disableKey(self, key):
-        key = self.translateKey(key)
+        self.keepLooping = True
         
-        if key in self.responses:
-            self.disabled[key] = self.responses[key]
-            del self.responses[key]
+        while self.keepLooping:
         
-    def enableKey(self, key):
-        key = self.translateKey(key)
+            key = window.getch()
+            
+            if key != -1:
+                self.respond(key, *moreargs **morekwargs)
+                
+                if key == exitKey:
+                    break
+                
+            elif iterator is not None:
+                iterator( *moreargs, **morekwargs)
+                
+            
         
-        if key in self.disabled:
-            self.responses[key] = self.disabled[key]
-            del self.disabled[key]
+        
+        
+        
+        
+        
+        
