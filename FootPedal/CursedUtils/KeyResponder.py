@@ -51,12 +51,17 @@ class KeyResponder(object):
             by default, curses' window.getch() does not look for
             keys like home, end, insert, left, pagedown, etc.
             by default, this class DOES, but you can turn
-            it off by setting this to False.
+            it off by setting this to False.  Don't know why
+            you would, but why take away an option?
     
         translateNumpad
-            determines if the numpad version of the keys will be 
-            treated the same as their counterparts. Defaults
-            to true.  
+            by default curses' window.getch() treats
+            the versions of the keypad keys that
+            are accessible by turning off numlock
+            as different keystrokes.
+            by default, this class doesn't, but you
+            can set this to False to get that back.
+
             Uses PADTRANSLATOR from the keymap file.
     
     There are three ways to get and process a keystroke.  All three
