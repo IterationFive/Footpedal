@@ -55,7 +55,9 @@ class KeyResponder(object):
     
         translateNumpad
             determines if the numpad version of the keys will be 
-            treated the same as their counterparts.
+            treated the same as their counterparts. Defaults
+            to true.  
+            Uses PADTRANSLATOR from the keymap file.
     
     There are three ways to get and process a keystroke.  All three
     give the ability to provide additional positional or keyword 
@@ -77,7 +79,8 @@ class KeyResponder(object):
             with the methods getch(), nodelay(), and keypad().
         
         exitKey
-            see above.  can be defined with the number or keymap key.
+            see above.  can be defined with the number or keymap key, 
+            or as a list of either.
         
         iterator
             optional. if provided, will run when a key is NOT pressed.
@@ -113,22 +116,24 @@ class KeyResponder(object):
     
         This is actually called by both of the above methods,
         and does not actually look for the keystroke-- it
-        responds to a number.  
+        just responds to a number.  This is the ultimate
+        build-your-own-code block, but be advised that, since
+        it does not actually interact with the window, 
+        it does not activate the keypad keys.
         
-        Unlike the above methods, respond() does not activate 
-        the keypad keys.  
+        if the value of key is a key that has a repsonse,
+        the key will be stored as the number in the attribute
+        'lastKeyNumber' and as a string in 'lastKeystroke'.
             
-    
-    
     
     '''
 
 
     def __init__(self, caseSensitive=False, activateKeypad=True, translateNumpad=True):
 
+        self.caseSensitive=caseSensitive
         self.activateKeypad=activateKeypad
         self.translateNumpad=translateNumpad
-        self.caseSensitive=caseSensitive
         
         self.lastKeyNumber = False
         self.lastKeystroke = False
@@ -383,15 +388,20 @@ class KeyResponder(object):
         
     def keyLoop(self, window, exitKey=27, iterator=None, *moreargs, **morekwargs ):
         
-        exitKey = self.translateKey(exitKey)
-        window.keypad( self.activateKeypad)
-        
+        if type( exitKey ) == list:
+            i = 0
+            while i < len( exitKey ):
+                exitKey[i] = self.translateKey(exitKey[i])
+                i += 1
+        else:
+            exitKey = self.translateKey(exitKey)
+            
+        window.keypad( self.activateKeypad)        
         
         if iterator is not None:
             window.nodelay( True )
         else:
-            window.nodelay( False )
-            
+            window.nodelay( False )            
         
         self.keepLooping = True
         
@@ -402,7 +412,7 @@ class KeyResponder(object):
             if key != -1:
                 self.respond(key, *moreargs **morekwargs)
                 
-                if key == exitKey:
+                if key == exitKey or ( type( exitKey) == list and key in exitKey ):
                     break
                 
             elif iterator is not None:
