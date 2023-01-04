@@ -12,7 +12,7 @@ class ColumnHandler(object):
     '''
 
 
-    def __init__( self, window:cu.ScreenHandler, contents:list, y, x, 
+    def __init__( self, window:cu.ScreenHandler, y, x, 
                  maxHeight=False, maxWidth=False, spacing=0, wordWrap=True,
                  yAlign=cu.TOP, iAlign=cu.LEFT, xAlign=cu.LEFT):
         '''
@@ -28,7 +28,7 @@ class ColumnHandler(object):
         y,x
             the starting point of the column.  
         maxHeight,maxWidth
-            if None, will automatically be set to the maximum available space
+            if False, will automatically be set to the maximum available space
             if AUTO will automatically be set to the minimum size dictated by contents and spacing
             These define the area in which the column is displayed and arranged,
             not the dimensions of the column itself, which will be placed in
@@ -65,22 +65,33 @@ class ColumnHandler(object):
         Note:  To be linguistically flexible,
             
         '''
+        self.settings = {'maxHeight':maxHeight, 'maxWidth':maxWidth, 'spacing':spacing, 'wordWrap': wordWrap,
+                 'yAlign':yAlign, 'iAlign':iAlign, 'xAlign':xAlign }
+        self.window = window
+        self.y = y 
+        self.x = x
+        
+        
+    def processContents(self, contents):
+        
         # convert any content to strings
         
         cu.stringifyList(contents)
         
         # determine maxWidth and actual width 
         
-        longestLengthAvailable = window.sizeX - x
+        longestLengthAvailable = self.window.sizeX - self.x
         longestLengthUsed = cu.getLongestLength(contents)
         
-        if maxWidth == False:
+        if self.settings[ 'maxWidth' ] == False:
             maxWidth = longestLengthAvailable            
-        elif maxWidth == cu.AUTO:            
+        elif self.settings[ 'maxWidth' ] == cu.AUTO:            
             if longestLengthUsed > longestLengthAvailable:
                 maxWidth = longestLengthAvailable
             else:
                 maxWidth = longestLengthUsed
+        else:
+            maxWidth = self.settings[ 'maxWidth' ]
                 
         if longestLengthUsed > maxWidth:
             width = longestLengthAvailable
@@ -89,7 +100,7 @@ class ColumnHandler(object):
                 
         # now apply wordwrap where needed        
                 
-        if wordWrap == True:                
+        if self.settings['wordWrap'] == True:                
             contents = cu.wrappedList(contents, maxWidth)
         else:
             contents = cu.clippedList(contents, maxWidth)
@@ -103,12 +114,14 @@ class ColumnHandler(object):
         usedlines = len( cu.collapseList( contents ))                
         spacesToFill = len( contents ) - 1
         
-        if maxHeight == False:
-            maxHeight = window.sizeY - y
+        if self.settings['maxHeight'] == False:
+            maxHeight = self.window.sizeY - self.y
+        elif self.settings['maxHeight'] != cu.AUTO:
+            maxHeight = self.settings['maxHeight']
             
-        if spacing == cu.AUTO:
+        if self.settings['spacing'] == cu.AUTO:
             
-            if maxHeight == cu.AUTO:
+            if self.settings['maxHeight'] == cu.AUTO:
                 spacing = 0
             else:
                 available = maxHeight - usedlines
@@ -117,10 +130,12 @@ class ColumnHandler(object):
                     spacing = 0
                 else:
                     spacing = int( available / spacesToFill )
+        else:
+            spacing = self.settings['spacing']
                     
         height = usedlines + ( spacing * spacesToFill )
         
-        if maxHeight == cu.AUTO:
+        if self.settings['maxHeight'] == cu.AUTO:
             maxHeight = height
             
         '''
@@ -137,18 +152,18 @@ class ColumnHandler(object):
             
         if height > maxHeight:
             yOffset = 0            
-        elif yAlign == cu.MIDDLE:            
+        elif self.settings['yAlign'] == cu.MIDDLE:            
             yOffset =  int( ( maxHeight - height ) / 2 )            
-        elif yAlign == cu.BOTTOM:            
+        elif self.settings['yAlign'] == cu.BOTTOM:            
             yOffset = maxHeight - height            
         else:
             # TOP or you screwed up            
             yOffset = 0
                 
         if maxWidth > width:            
-            if xAlign == cu.CENTER:
+            if self.settings['xAlign'] == cu.CENTER:
                 xOffset = int( ( maxWidth - width ) / 2 ) 
-            elif xAlign == cu.RIGHT:
+            elif self.settings['xAlign'] == cu.RIGHT:
                 xOffset = maxWidth - width
             else:
                 # LEFT or you screwed up
@@ -157,52 +172,42 @@ class ColumnHandler(object):
         else:
             xOffset = 0
             
-        yOffset += y
-        xOffset += x
+        yOffset += self.y
+        xOffset += self.x
         
         #now we know where we're going to put the column.
         
         # and heeeeeeeere we go 
         
-        self.contents = contents
-        self.iAlign = iAlign
-        self.yOffset, self.xOffset = yOffset, xOffset
-        self.height, self.width = height, width
-        self.spacing = spacing
-        self.window = window
+        activeY = yOffset
         
-        
-    def write(self):
-            
-        activeY = self.yOffset
-        
-        for item in self.contents:
+        for item in contents:
             if type( item ) == str:
                 item = [item]
             
             for line in item:
             
-                if self.iAlign == cu.CENTER:
-                    lineOffset = int( ( self.width - len( line ) ) / 2 )
+                if self.settings['iAlign'] == cu.CENTER:
+                    lineOffset = int( ( width - len( line ) ) / 2 )
     
-                elif self.iAlign == cu.RIGHT:
-                    lineOffset = self.width - len( line )
+                elif self.settings['iAlign'] == cu.RIGHT:
+                    lineOffset = width - len( line )
                 else:
                     # LEFT or you screwed up 
                     lineOffset = 0              
                     
-                self.window.write( activeY, self.xOffset + lineOffset, line )
+                self.window.write( activeY, xOffset + lineOffset, line )
                 activeY += 1
                 
-                if activeY ==  self.height + self.yOffset:
+                if activeY ==  height + yOffset:
                     # we are outside the available area
                     break
                 
-            activeY += self.spacing
+            activeY += spacing
                 
-            if activeY == self.height + self.yOffset:
+            if activeY == height + yOffset:
                 # we are outside the available area
                 break
             
-        self.window.refresh()        
+        self.window.refresh()      
         
