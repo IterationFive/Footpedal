@@ -5,7 +5,7 @@ Created on Dec 22, 2022
 '''
 
 import HandBrakeUtils.queueManager as qm
-from CursedUtils import ScreenHandler
+from CursedUtils import Screen
 from time import sleep
 from threading import Thread
 
@@ -15,7 +15,7 @@ class HandbrakeChyron(object):
     '''
 
 
-    def __init__(self, window:ScreenHandler, hqm:qm.hbQueueManager):
+    def __init__(self, window:Screen, hqm:qm.hbQueueManager):
         '''
         Constructor
         '''
@@ -53,34 +53,37 @@ class HandbrakeChyron(object):
             
             if runState == qm.WAITING:
                                 
-                self.window.slotWriteNow( 'hbTitleBar', 'No Files Queued' )
-                self.window.slotWriteNow( 'hbJobStatus', 'Processing Idle' )
-                self.window.slotWriteNow( 'hbJobETA', '' )
-                self.window.slotWriteNow( 'hbJob%', '' )
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring ) 
-                self.window.slotWriteNow( 'hbJobFPS', '' )
+                self.window.slotWrite( 'hbTitleBar', 'No Files Queued' )
+                self.window.slotWrite( 'hbJobStatus', 'Processing Idle' )
+                self.window.slotWrite( 'hbJobETA', '' )
+                self.window.slotWrite( 'hbJob%', '' )
+                self.window.slotWrite( 'hbQueueStatus', bragstring ) 
+                self.window.slotWrite( 'hbJobFPS', '' )
+                self.window.refresh()
                 sleep(0.1)
                 
                 
                 continue
             
             if runState == qm.IDLE:
-                self.window.slotWriteNow( 'hbTitleBar', 'Processing Idle' )
-                self.window.slotWriteNow( 'hbJobStatus', '' )
-                self.window.slotWriteNow( 'hbJobETA', '' )
-                self.window.slotWriteNow( 'hbJob%', '' )
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring ) 
-                self.window.slotWriteNow( 'hbJobFPS', '' )
+                self.window.slotWrite( 'hbTitleBar', 'Processing Idle' )
+                self.window.slotWrite( 'hbJobStatus', '' )
+                self.window.slotWrite( 'hbJobETA', '' )
+                self.window.slotWrite( 'hbJob%', '' )
+                self.window.slotWrite( 'hbQueueStatus', bragstring ) 
+                self.window.slotWrite( 'hbJobFPS', '' )
+                self.window.refresh()
                 sleep(0.1)
                 continue
             
             if runState == qm.STOPPING:
-                self.window.slotWriteNow( 'hbTitleBar', 'Shutting down...' )
-                self.window.slotWriteNow( 'hbJobStatus', '' )
-                self.window.slotWriteNow( 'hbJobETA', '' )
-                self.window.slotWriteNow( 'hbJob%', '' )
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring ) 
-                self.window.slotWriteNow( 'hbJobFPS', '' )
+                self.window.slotWrite( 'hbTitleBar', 'Shutting down...' )
+                self.window.slotWrite( 'hbJobStatus', '' )
+                self.window.slotWrite( 'hbJobETA', '' )
+                self.window.slotWrite( 'hbJob%', '' )
+                self.window.slotWrite( 'hbQueueStatus', bragstring ) 
+                self.window.slotWrite( 'hbJobFPS', '' )
+                self.window.refresh()
                 sleep(0.1)
                 continue
             
@@ -89,14 +92,17 @@ class HandbrakeChyron(object):
             
             # all remaining states involve a currently processing job
             
-            self.window.slotWriteNow( 'hbTitleBar', runReport['file'] )
+            self.window.slotWrite( 'hbTitleBar', runReport['file'] )
             
             if runState == qm.IDLEAFTER:
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring + ' (Going Idle after this file)' )
+                self.window.slotWrite( 'hbQueueStatus', bragstring + ' (Going Idle after this file)' )
+                self.window.refresh()
             elif runState == qm.STOPAFTER:
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring + ' (Shutting down after this file)')
+                self.window.slotWrite( 'hbQueueStatus', bragstring + ' (Shutting down after this file)')
+                self.window.refresh()
             else:
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring )
+                self.window.slotWrite( 'hbQueueStatus', bragstring )
+                self.window.refresh()
                 
             jobState = self.hqm.jobState.get()
             
@@ -107,58 +113,69 @@ class HandbrakeChyron(object):
                 if jobInfo['%'] == '':
                     # this is one of the fields that doesn't blank out
                     # so if it's not set, then we're just starting up
-                    self.window.slotWriteNow( 'hbJobStatus', 'Starting up...' )
-                    self.window.slotWriteNow( 'hbJobETA', '' )
-                    self.window.slotWriteNow( 'hbJob%', '' )
-                    self.window.slotWriteNow( 'hbQueueStatus', bragstring ) 
-                    self.window.slotWriteNow( 'hbJobFPS', '' )
+                    self.window.slotWrite( 'hbJobStatus', 'Starting up...' )
+                    self.window.slotWrite( 'hbJobETA', '' )
+                    self.window.slotWrite( 'hbJob%', '' )
+                    self.window.slotWrite( 'hbQueueStatus', bragstring ) 
+                    self.window.slotWrite( 'hbJobFPS', '' )
+                    self.window.refresh()
                     
                 else:
                     
                     if jobInfo['fpsNow'] != '' and jobInfo['fpsNow'][0:2] != '00':                     
-                        self.window.slotWriteNow( 'hbJobFPS', jobInfo['fpsNow'] + 'fps/' + jobInfo['fpsAvg'] +'avg' )
+                        self.window.slotWrite( 'hbJobFPS', jobInfo['fpsNow'] + 'fps/' + jobInfo['fpsAvg'] +'avg' )
+                        self.window.refresh()
                         
                     if jobInfo['task'] != '' and jobInfo['taskTotal'] != '':
-                        self.window.slotWriteNow( 'hbJobStatus', 'Converting, task ' + jobInfo['task'] + ' of ' + jobInfo['taskTotal'] )
+                        self.window.slotWrite( 'hbJobStatus', 'Converting, task ' + jobInfo['task'] + ' of ' + jobInfo['taskTotal'] )
+                        self.window.refresh()
                     else:
-                        self.window.slotWriteNow( 'hbJobStatus', 'Converting')
+                        self.window.slotWrite( 'hbJobStatus', 'Converting')
+                        self.window.refresh()
                         
                     if jobInfo['eta'] != '':
-                        self.window.slotWriteNow( 'hbJobETA', jobInfo['eta'] )
+                        self.window.slotWrite( 'hbJobETA', jobInfo['eta'] )
+                        self.window.refresh()
                                                   
                     if len( jobInfo['%'] ) == 5 :
                         jobInfo['%'] = '0' + jobInfo['%']
                         
-                    self.window.slotWriteNow('hbJob%', jobInfo['%'])
+                    self.window.slotWrite('hbJob%', jobInfo['%'])
+                    self.window.refresh()
                         
             elif jobState == qm.SUSPENDED:
                 jobInfo = self.hqm.hbProcess.data.copy()
-                self.window.slotWriteNow( 'hbJobStatus', 'Processing Suspended' )
-                self.window.slotWriteNow( 'hbJobETA', '' )
-                self.window.slotWriteNow( 'hbQueueStatus', '1 file suspended, ' + bragstring ) 
-                self.window.slotWriteNow( 'hbJobFPS', '' )
+                self.window.slotWrite( 'hbJobStatus', 'Processing Suspended' )
+                self.window.slotWrite( 'hbJobETA', '' )
+                self.window.slotWrite( 'hbQueueStatus', '1 file suspended, ' + bragstring ) 
+                self.window.slotWrite( 'hbJobFPS', '' )
                 
                 if jobInfo['%'] != '':                
                     if len( jobInfo['%'] ) == 4:
                         jobInfo['%'] = '0' + jobInfo['%']
-                    self.window.slotWriteNow('hbJob%', jobInfo['%'])
+                    self.window.slotWrite('hbJob%', jobInfo['%'])
+                self.window.refresh()
                     
             else:
                     
                 if jobState == qm.MOVING:
-                    self.window.slotWriteNow( 'hbJobStatus', 'Moving file to destination' )
+                    self.window.slotWrite( 'hbJobStatus', 'Moving file to destination' )
+                    self.window.refresh()
                         
                 elif jobState == qm.BACKINGUP:
-                    self.window.slotWriteNow( 'hbJobStatus', 'Creating Backup' )
+                    self.window.slotWrite( 'hbJobStatus', 'Creating Backup' )
+                    self.window.refresh()
                         
                 elif jobState == qm.CLEANUP:
-                    self.window.slotWriteNow( 'hbJobStatus', 'Cleaning up' )
+                    self.window.slotWrite( 'hbJobStatus', 'Cleaning up' )
+                    self.window.refresh()
 
 
-                self.window.slotWriteNow( 'hbJobETA', '' )
-                self.window.slotWriteNow( 'hbJob%', '' )
-                self.window.slotWriteNow( 'hbQueueStatus', bragstring ) 
-                self.window.slotWriteNow( 'hbJobFPS', '' )
+                self.window.slotWrite( 'hbJobETA', '' )
+                self.window.slotWrite( 'hbJob%', '' )
+                self.window.slotWrite( 'hbQueueStatus', bragstring ) 
+                self.window.slotWrite( 'hbJobFPS', '' )
+                self.window.refresh()
                     
             sleep( 0.125 )
                     
