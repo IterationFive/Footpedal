@@ -12,7 +12,7 @@ class Window(Screen):
     classdocs
     '''
     
-    def __init__(self, parent:Screen, height, width, y, x ):
+    def __init__(self, parent:Screen, height, width, y=0, x=0 ):
         
         self.parent = parent
         self.config = parent.config
