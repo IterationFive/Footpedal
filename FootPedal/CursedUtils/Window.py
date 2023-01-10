@@ -21,7 +21,6 @@ class Window(Screen):
             width = parent.sizeX
         
         self.parent = parent
-        self.config = parent.config
         self.screen = parent.screen
         self.sizeY = height
         self.sizeX = width
@@ -31,6 +30,14 @@ class Window(Screen):
         self.slot = {}
         
         self.window = curses.newwin( height, width, y, x )
+        
+        # rather than recode the wheel
+        self.nap = curses.napms
+        self.keypad = self.window.keypad
+        self.nodelay = self.window.nodelay
+        self.getch = self.window.getch 
+        self.refresh = self.window.refresh
+        self.write = self.window.addstr 
         
         self.setup()
     
