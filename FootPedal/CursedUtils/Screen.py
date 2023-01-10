@@ -5,6 +5,7 @@ Created on Jan 5, 2023
 '''
 
 import curses
+from curses.textpad import Textbox
 import CursedUtils as cu
 
 class Screen(object):
@@ -123,7 +124,7 @@ class Screen(object):
         inputline = curses.newwin( 1, length, y, x )
         inputline.addstr( 0,0, str(prefill))
         
-        i = curses.textpad.Textbox( inputline )
+        i = Textbox( inputline )
         i.edit()
         
         r = i.gather().strip()
