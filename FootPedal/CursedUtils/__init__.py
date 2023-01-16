@@ -23,3 +23,4 @@ from CursedUtils.Screen import Screen
 from CursedUtils.Window import Window
 from CursedUtils.KeyResponder import KeyResponder
 from CursedUtils.keymaps import KEYMAP, PADTRANSLATOR
+from CursedUtils.ConfigMenu import ConfigMenu
