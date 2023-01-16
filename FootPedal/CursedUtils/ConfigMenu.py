@@ -121,7 +121,6 @@ class ConfigMenu(cu.Window):
     '''
 
     def __init__(self, parent:cu.Screen, title, key, height=HEIGHT, width=WIDTH, y=Y, x=X, configFile=CONFIGFILE):
-        cu.Window.__init__(self, parent, height, width, y, x)
         
         self.configFile=configFile
         self.configKey=key
@@ -130,7 +129,9 @@ class ConfigMenu(cu.Window):
         self.maxLabel = 0
         self.title = title
         self.keys = cu.KeyResponder()
+        self.changed = False
         self.loadConfig()
+        cu.Window.__init__(self, parent, height, width, y, x)
         
     
     def loadConfig(self):
@@ -157,7 +158,7 @@ class ConfigMenu(cu.Window):
         if width > self.maxField:
             self.maxField = width
         if len( label ) > self.maxLabel:
-            self.maxLabel = label
+            self.maxLabel = len( label )
             
     def isFile(self, validate ):
         if os.path.isfile( validate ):
@@ -199,7 +200,7 @@ class ConfigMenu(cu.Window):
             field = self.fields[i]
             
             self.write( y, labelanchor - len( field[0]), field[0])
-            self.setSlot( y, fieldanchor, field[0], field[1] )
+            self.setSlot( field[0], y, fieldanchor, field[1] )
             self.keys.setResponse( str(i+1), self.editField, args=[i] )
             i += 1
             y += self.tableSpacing
@@ -242,6 +243,8 @@ class ConfigMenu(cu.Window):
         self.slotWrite( 'menuoption1', 'Press a number to change the corresponding value' )
         self.slotWrite( 'menuoption2', 'Press S to Save and Exit    Press Esc to Cancel' )
         
+        self.keys.keyLoop(self.window)
+        
         
     def saveAndExit(self):
         self.saveConfig()
@@ -269,7 +272,7 @@ class ConfigMenu(cu.Window):
                 
             prefill = self.config[self.configKey][field[0]]
             
-        self.slotWrite(field[0], field[2], True )
+        self.slotWrite('detail', field[2], True )
         
         while True:
         
