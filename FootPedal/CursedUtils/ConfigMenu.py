@@ -1,23 +1,321 @@
 '''
-Created on Jan 14, 2023
+Created on Jan 15, 2023
 
 @author: Cather Steincamp
 '''
-
 import CursedUtils as cu
+import json
+import os 
 
 CONFIGFILE = './footpedal.config'
 
+HEIGHT=25
+WIDTH=110
+Y=1
+X=5
+
 class ConfigMenu(cu.Window):
     '''
-    classdocs
+    This class can be used by itself to create and manage simple configuration
+    options held as a dictionary (that may or may not contain sub-dictionaries) 
+    and stored in a JSON file.
+    
+    The constructor takes the following arguments:
+    
+        parent: 
+            a cursedUtils.Screen object.
+            
+        title:
+            The label at the top of the screen
+            
+        key:
+            if not None, the object will work with a subdictionary by this name
+            if None, the object will work with keys in the top-level dictionary
+            
+        height,width,y,x
+            passed to the cu.Window constructor
+            
+        configFile
+            the JSON file where the data will be stored in a pretty indented fashion.
+            
+    Configuration is done with the .addField() command.  Recommended usage is that 
+    each menu be a child class, where .setup() (automatically run by cu.Window's constructor) 
+    is basically a collection  of .addField() commands.  Its parameters are as follows:
+        
+        label
+            this is both the onscreen label and the dictionary key for the value
+        width
+            max width in characters
+        description
+            optional
+            if provided, this text will be displayed in the 'detail' field
+        validator
+            optional
+            a function or method that takes input and tests it to make
+            sure it meets desired standards.  A validator should return
+            True or an error string, which will be displayed on screen. 
+    
+    Once configured the menu can be invoked with .runMenu() or .firstRun().  
+    
+    .firstRun() walks the user through each field, saves the results, then
+    runs .runMenu()
+    
+    .runMenu() lets the user pick which, if any, fields to change, then
+    Save and Exit (with S/s) or cancel (Esc).
+    
+    
+    Additional methods:
+                
+        .isFile(validate) 
+        .isDir(validate)
+        
+            These are built-in validators that test to see whether something 
+            is an existing file or directory, respectively
+            
+        .layout()
+        
+            uses the provided title and fields to display the options and
+            values on the screen and adds the approriate numbers to the key
+            repsonder, along with the save/exit options.
+            
+            If any values are not in the config dictionary, these values will 
+            be initalized with blanks.
+            
+            does not add the numbers or invoke the key responder; those
+            are handled by .runMenu()
+            
+            This is not a particularly flexible method, but there is nothing
+            to prevent it from being overwritten in a child class.
+            
+        .loadConfig()
+        
+            is called during initialization; loads the file into the local configuration
+            dictionary for editing.
+            
+            if the file does not exist, it will be created.
+        
+        .saveConfig()
+        
+            if any changes have been made, this will rewrite the configuration file.
+            
+        .saveAndExit()
+            the default option for saving and exiting.
+            
+            (Note that there is no 'cancel' function, as it requires no action, and
+            the keyresponder exits on Escape by default.)
+            
+        .editField(index)
+            nust be run after .layout().
+            
+            This adds the description (if present) to the screen, then creates the editbox 
+            and validates the results.  If results fail validation, error message is shown
+            and the user is prompted again
+            
+        .fillslots()
+            utility function to populate the slots of the layout with the corresponding
+            configuration values.
+            
+            
+    
+    
     '''
 
-    def __init__(self, parent, menuData:dict,):
-        self.menuData = menuData
-        cu.Window.__init__(self, parent, 25, 110, 1, 5)
+    def __init__(self, parent:cu.Screen, title, key, height=HEIGHT, width=WIDTH, y=Y, x=X, configFile=CONFIGFILE):
+        cu.Window.__init__(self, parent, height, width, y, x)
         
-    def fillFields(self):
-        pass
+        self.configFile=configFile
+        self.configKey=key
+        self.fields = []
+        self.maxField = 0
+        self.maxLabel = 0
+        self.title = title
+        self.keys = cu.KeyResponder()
+        self.loadConfig()
+        
+    
+    def loadConfig(self):
+        if os.path.isfile( self.configFile):
+            f = open( self.configFile, 'r' )
+            self.config = json.load( f )
+            f.close()
+        else:
+            #create an empty file
+            self.config = {}
+            self.saveConfig()
+            
+        self.changed = False
+        
+    def saveConfig(self):
+        if self.changed:
+            f = open( self.configFile, 'w' )
+            json.dump(self.config, f, indent=1)
+            f.close()
+        self.changed = False
+        
+    def addField(self, label, width, description='', validator=None):
+        self.fields.append( [label, width, description, validator])
+        if width > self.maxField:
+            self.maxField = width
+        if len( label ) > self.maxLabel:
+            self.maxLabel = label
+            
+    def isFile(self, validate ):
+        if os.path.isfile( validate ):
+            return True
+        else:
+            return 'Invalid File Name'
+    
+    def isDir(self, validate):
+        if os.path.isdir( validate ):
+            return True 
+        else:
+            return 'Invalid Path Name'
+    
+    def layout(self):
+        
+        self.write( 1, int( ( self.sizeX - len( self.title ) ) / 2 ), self.title )
+        
+        self.leftpoint = int( ( self.sizeX - ( self.maxLabel + self.maxField + 5 ) ) / 2 )
+        # The five is to account for the option key + 2 spaces each between columns
+        
+        labelanchor = self.leftpoint + 3 + self.maxLabel
+        # The three is to account for the option key and the two spaces after it.
+        # note that this is a RIGHT anchor 
+        
+        fieldanchor = labelanchor + 2 
+        
+        self.setSlot('detail', 3, 1, self.sizeX - 2, cu.CENTER)
+        self.setSlot('error', 5, 1, self.sizeX - 2, cu.CENTER)
+        
+        self.tableY = 7
+        self.tableSpacing = 2
+        
+        y = self.tableY
+        
+        i = 0
+        
+        while i < len( self.fields ):
+            
+            field = self.fields[i]
+            
+            self.write( y, labelanchor - len( field[0]), field[0])
+            self.setSlot( y, fieldanchor, field[0], field[1] )
+            self.keys.setResponse( str(i+1), self.editField, args=[i] )
+            i += 1
+            y += self.tableSpacing
+            
+        self.setSlot( 'menuoption1', y, 1, self.sizeX - 2, cu.CENTER )
+        self.setSlot( 'menuoption2', y+1, 1, self.sizeX - 2, cu.CENTER )
+        
+        self.keys.setResponse( 'S', self.saveAndExit )
+        self.keys.setResponse( 's', self.saveAndExit )
+        
+        # Esc is the default exit key, so it need not be defined here
+        
+        self.fillSlots()
+            
+    def firstRun(self):
+        self.layout()
+    
+        i = 0
+        
+        while i < len( self.fields ):
+            self.editField(i)
+            i += 1
+            
+        self.saveConfig()    
+        self.runMenu(False)
+            
+    def runMenu(self, doLayout=True ):
+        
+        if doLayout:
+            self.layout()
+            
+        i = 0
+        y = self.tableY
+        
+        while i < len( self.fields ):
+            self.write( y, self.leftpoint, str(i+1))
+            y += self.tableSpacing
+            i += 1
+            
+        self.slotWrite( 'menuoption1', 'Press a number to change the corresponding value' )
+        self.slotWrite( 'menuoption2', 'Press S to Save and Exit    Press Esc to Cancel' )
+        
+        
+    def saveAndExit(self):
+        self.saveConfig()
+        self.keys.keepLooping = False
+
+    def editField(self, index ):
+        # we have been conveniently provided the index of the field in self.fields.
+        
+        field = self.fields[index]
+        slot = self.slot[field[0]]
+        
+        if self.configKey is None:
+            if field[0] not in self.config:
+                self.config[field[0]] = ''
+                self.changed = True
+            
+            prefill = self.config[field[0]]
+        else:
+            if self.configKey not in self.config:
+                self.config[self.configKey] = {}
+                self.changed = True
+            if field[0] not in self.config[self.configKey]:
+                self.config[self.configKey][field[0]] = ''
+                self.changed = True
+                
+            prefill = self.config[self.configKey][field[0]]
+            
+        self.slotWrite(field[0], field[2], True )
+        
+        while True:
+        
+            r = self.lineInput( slot['y'], slot['x'],slot['w'], prefill )
+            
+            if field[3] is not None:
+                
+                validate = field[3](r)
+                
+                if validate != True :
+                    self.slotWrite( 'error', validate, True )
+                    prefill = r
+                    continue
+            
+            # either there is no validation or we've passed it
+            break
+        
+        if self.configKey is None:
+            if self.config[field[0]] != r:
+                self.config[field[0]] = r
+                self.changed = True
+        else:
+            if self.config[self.configKey][field[0]] != r:
+                self.config[self.configKey][field[0]] = r
+                self.changed = True 
+                
+        self.slotBlank('error')
+        self.slotBlank('detail')
+        self.slotWrite(field[0], r, True ) 
+        
+        
+    def fillSlots(self):
+        
+        if self.configKey is None:
+            for field in self.config:
+                if type( self.config[field] ) == str:
+                    self.slotWrite( field, self.config[field] )
+                    
+        elif self.configKey in self.config:
+            for field in self.config[self.configKey]:
+                self.slotWrite(field, self.config[self.configKey][field])
+                
+        else:
+            # if we're being asked for it, we'll need it.
+            self.config[self.configKey] = {}
+                
+            
         
         
