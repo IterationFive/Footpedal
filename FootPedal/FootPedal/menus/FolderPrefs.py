@@ -9,9 +9,13 @@ class FolderMenu(cu.Window):
     '''
     classdocs
     '''
+    
+    def __init__(self, parent, menuData:dict, height=None, width=None, y=0, x=0):
+        self.menuData = menuData
+        cu.Window.__init__(self, parent, height=height, width=width, y=y, x=x)
+    
     def setup(self):
         
-        self.menuData = {}
         self.descriptions = {        
             'inbox':'This application will check this folder for new files and subtitles.',
             'staging':'Optional.  If set, files will be moved here pending processing.',
@@ -19,7 +23,7 @@ class FolderMenu(cu.Window):
             'trash':'Optional.  If set, original files will be moved here after conversion.',
             'temp':'This folder is used for processing.',
             'backup':'Optional.  If set, a second copy of the converted file will be placed here.',
-            'log':'This application will check this folder for new files and subtitles.' }
+            'log':'Logfiles will be stored here.' }
         
         self.setSlot( 'title', 1, 50, 20, cu.CENTER )
         
@@ -58,6 +62,12 @@ class FolderMenu(cu.Window):
         self.keys.setResponse( '7', self.editField, args=['log'] )
         self.keys.setResponse( 'escape', self.saveAndExit )
         
+        if 'paths' in self.menuData:
+            for field in ['inbox','staging','outbox','trash','temp','backup','log' ]:
+                self.slotWrite(field, self.menuData['path'][field])
+        else:
+            self.menuData['path'] = {}
+        
         self.refresh()
         
     def editField(self, field ):
@@ -71,13 +81,13 @@ class FolderMenu(cu.Window):
                 
                 if field in ['inbox','outbox','temp','log']:
                     if os.path.exists( r ):
-                        self.menuData[field ]= r
+                        self.menuData['path'][field ]= r
                         self.slotBlank( 'error', True)
                         self.slotBlank( 'detail', True)
                         break
                 else:
                     if r=='' or os.path.exists( r ):
-                        self.menuData[field ]= r
+                        self.menuData['path'][field ]= r
                         self.slotBlank( 'error', True)
                         self.slotBlank( 'detail', True)
                         break 
