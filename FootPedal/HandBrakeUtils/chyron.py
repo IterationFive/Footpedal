@@ -48,7 +48,7 @@ class HandbrakeChyron(object):
         while True:
             
             runState = self.hqm.runState.get()
-            runReport = self.hqm.runReport.d
+            runReport = self.hqm.runReport.copy()
             bragstring = str( runReport['done'] ) + ' file(s) completed, ' + str( runReport['err'] ) + ' failed, ' + str( runReport['queued'] ) + ' queued'
             
             if runState == qm.WAITING:
