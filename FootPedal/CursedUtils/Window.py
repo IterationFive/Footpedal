@@ -9,23 +9,54 @@ from CursedUtils import Screen
 
 class Window(Screen):
     '''
-    classdocs
+    This class encapsulates and manageds a curses window object, and provides 
+    the additional functionality the CursedUtils.Screen object, making them
+    functionally almost interchangeable.
+    
+    The constructor has the following arguments:
+    
+        parent
+            Either the CursedUtils.Screen object or another object of this class.
+        height
+            height of the window in lines
+            optional, defaults to the size of the parent window
+        width
+            width of the the window in characters
+            optional, defaults to the size of the parent window
+        y,x
+            The position of this window within the parent window
+            
+            
+    The move( y, x ) method has been added.
+    
+    The following methods provide the window version of the functionality
+    of the methods from the screen.
+    
+    setSize()
+    reopen()
+    close()
+    
+    It should be noted that close() automatically reopens the parent window and refreshes it.
+    
+    
     '''
     
-    def __init__(self, parent:Screen, height=None, width=None, y=0, x=0 ):
-        
+    def __init__(self, parent:Screen, height=None, width=None, y=0, x=0 ):        
         
         if height is None:
             height = parent.sizeY
         if width is None:
             width = parent.sizeX
         
-        self.parent = parent
-        self.screen = parent.screen
+        self.parent = parent            # can be the CursedUtils.Screen or another object of this class
+        self.stdscr = parent.stdscr     # will always point to the curses screen object
+        self.screen = parent.screen     # will always be the CursedUtils.Screen
         self.sizeY = height
         self.sizeX = width
         self.offsetY = y + parent.offsetY
         self.offsetX = x + parent.offsetX
+        self.locY = y
+        self.locX = x
         
         self.slot = {}
         
