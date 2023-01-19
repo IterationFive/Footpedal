@@ -1,9 +1,5 @@
-import FootPedal.config as config
 
-'''
-TVDB Config
-'''
-
-TVDB_API = ''
-TVDB_KEY = ''
-
+MAINCONFIG = './footpedal.conf'
+SHOWCONFIG = './shows.conf'
+QUEUEFILE = './footpedal.queue'
+LOGDIR = './'
