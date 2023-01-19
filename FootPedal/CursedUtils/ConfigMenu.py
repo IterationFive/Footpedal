@@ -303,12 +303,13 @@ class ConfigMenu(cu.Window):
         
         if self.configKey is None:
             for field in self.config:
-                if type( self.config[field] ) == str:
+                if type( self.config[field] ) == str and field in self.slot:
                     self.slotWrite( field, self.config[field] )
                     
         elif self.configKey in self.config:
             for field in self.config[self.configKey]:
-                self.slotWrite(field, self.config[self.configKey][field])
+                if field in self.slot:
+                    self.slotWrite(field, self.config[self.configKey][field])
                 
         else:
             # if we're being asked for it, we'll need it.
