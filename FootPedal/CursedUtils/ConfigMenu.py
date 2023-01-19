@@ -7,12 +7,9 @@ import CursedUtils as cu
 import json
 import os 
 
-CONFIGFILE = './footpedal.config'
+from FootPedal import MAINCONFIG
 
-HEIGHT=25
-WIDTH=110
-Y=1
-X=5
+
 
 class ConfigMenu(cu.Window):
     '''
@@ -120,18 +117,16 @@ class ConfigMenu(cu.Window):
     
     '''
 
-    def __init__(self, parent:cu.Screen, title, key, height=HEIGHT, width=WIDTH, y=Y, x=X, configFile=CONFIGFILE):
+    def __init__(self, parent:cu.Screen, configFile=MAINCONFIG):
         
         self.configFile=configFile
-        self.configKey=key
         self.fields = []
         self.maxField = 0
         self.maxLabel = 0
-        self.title = title
         self.keys = cu.KeyResponder()
         self.changed = False
         self.loadConfig()
-        cu.Window.__init__(self, parent, height, width, y, x)
+        cu.Window.__init__(self, parent, 25, 110, 1, 5)
         
     
     def loadConfig(self):

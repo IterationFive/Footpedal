@@ -12,6 +12,8 @@ class PathConfig(cu.ConfigMenu):
     '''
     
     def setup(self):
+        self.title = 'Folder Preferences'
+        self.configKey='paths'
         self.addField('Inbox', 75, 'This application will check this folder for new files and subtitles.', self.isDir )
         self.addField('Staging', 75, 'Optional.  If set, files will be moved here pending processing.', self.isDir )
         self.addField('Outbox', 75, 'The default location for converted files.', self.isDir )

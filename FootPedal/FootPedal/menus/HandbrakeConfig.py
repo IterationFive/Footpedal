@@ -13,6 +13,8 @@ class HandbrakeConfig(cu.ConfigMenu):
 
 
     def setup(self):
+        self.title = 'HandBrake Preferences'
+        self.configKey='handbrake'
         self.addField('Handbrake CLI', 75, 'The location of the HandBrakeCLI executable', self.isFile )
         self.addField('Preset', 40, '(Optional) One of the built-in HandPresets' )
         self.addField('GUI Preset', 40, '(Optional) A Preset Created and named using the GUI' )
