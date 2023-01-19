@@ -7,9 +7,7 @@ Created on Jan 18, 2023
 from FootPedal import MAINCONFIG, SHOWCONFIG, LOGDIR, QUEUEFILE
 import CursedUtils as cu
 from HandBrakeUtils.queueManager import hbQueueManager, STOPPING
-from lib import CrossThreadDict
 import FootPedal.menus as menu
-from _ast import arg
 
 class MainMenu(object):
     '''
@@ -17,7 +15,7 @@ class MainMenu(object):
     '''
 
 
-    def __init__(self, window:cu.Screen, qm:hbQueueManager, config:CrossThreadDict ):
+    def __init__(self, window:cu.Screen, qm:hbQueueManager, config:dict ):
         '''
         Constructor
         '''
