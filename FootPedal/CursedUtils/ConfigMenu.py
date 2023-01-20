@@ -126,7 +126,7 @@ class ConfigMenu(cu.Window):
         self.keys = cu.KeyResponder()
         self.changed = False
         self.loadConfig()
-        cu.Window.__init__(self, parent, 25, 110, 1, 5)
+        cu.Window.__init__(self, parent)
         
     
     def loadConfig(self):
