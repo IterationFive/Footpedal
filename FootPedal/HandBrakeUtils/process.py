@@ -38,7 +38,7 @@ class hbProcess(Pwatch):
     '''
 
 
-    def __init__(self, sourceFile, outputFile, srts=False, 
+    def __init__(self, sourceFile, outputFile, srts, 
                  preset, guiPreset, json, params, cli, log, sublang):
         '''
         sourcefile         
