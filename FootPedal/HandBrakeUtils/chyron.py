@@ -21,6 +21,7 @@ class HandbrakeChyron(object):
         '''
         self.window = window
         self.hqm = hqm
+        self.active = True
         
         
         y = window.sizeY - 4
@@ -37,7 +38,13 @@ class HandbrakeChyron(object):
         
         self.t = Thread( target = self.display )
         self.t.start()
+    
+    def deactivate(self):
+        self.active = False
         
+    def activate(self):
+        self.active = True
+    
     def debug(self, debug):
         f= open( '../../hqm.log', 'a')
         f.write( str( debug ) + '\n')
@@ -46,6 +53,10 @@ class HandbrakeChyron(object):
     def display(self):
         
         while True:
+            
+            if self.active == False:
+                sleep( 0.125 )
+                continue
             
             runState = self.hqm.runState.get()
             runReport = self.hqm.runReport.copy()
