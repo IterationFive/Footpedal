@@ -4,8 +4,6 @@ Created on Dec 22, 2022
 @author: Cather Steincamp
 '''
 from lib import Pwatch
-from FootPedal.config import HandBrake as HB
-from FootPedal.config.paths import LOG
 from lib.CrossThreaders import CrossThreadDict
 import re 
 from time import sleep, time
@@ -41,7 +39,7 @@ class hbProcess(Pwatch):
 
 
     def __init__(self, sourceFile, outputFile, srts=False, 
-                 preset=HB.PRESET, guiPreset=HB.GUI_PRESET, json=HB.JSON, params=HB.PARAMS, cli=HB.CLI, log=LOG):
+                 preset, guiPreset, json, params, cli, log, sublang):
         '''
         sourcefile         
                 The full paths and filename of the file to be converted.
@@ -114,7 +112,7 @@ class hbProcess(Pwatch):
                 if len( r ) > 1 :
                     sublangs += r[1]
                 else:
-                    sublangs += HB.SUB_LANG
+                    sublangs += sublang
                 
                 if i != len(subs) - 1 :
                     sublist +=','

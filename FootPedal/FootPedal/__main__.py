@@ -48,7 +48,8 @@ if __name__ == '__main__':
     qm = hbQueueManager(source=config['paths']['Staging'], destination=config['paths']['Outbox'], trash=config['paths']['Trash'], 
                         backup=config['paths']['Backup'], json=config['handbrake']['JSON Config'],  
                         preset=config['handbrake']['Preset'], guiPreset=config['handbrake']['GUI Preset'], params={}, 
-                        log=LOGDIR, tmp=config['paths']['Temp'], cli=config['handbrake']['Handbrake CLI'], queue=fileQueue)
+                        tmp=config['paths']['Temp'], cli=config['handbrake']['Handbrake CLI'], 
+                        sublang=config['handbrake']['Subtitle Language'], log=LOGDIR, queue=fileQueue)
     
     chyron = HandbrakeChyron(ui, qm)
     

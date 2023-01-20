@@ -4,8 +4,6 @@ Created on Dec 22, 2022
 @author: Cather Steincamp
 '''
 from lib import CrossThreadList, CrossThreadItem, CrossThreadDict
-from FootPedal.config import paths as path
-from FootPedal.config import HandBrake as HB
 from time import sleep
 import re
 from shutil import copy2 as filecopy, move as filemove
@@ -71,9 +69,8 @@ class hbQueueManager(object):
     '''
 
 
-    def __init__(self, source=path.STAGE, destination=path.OUTPUT, trash=path.TRASH, backup=path.BACKUP,
-                 json=HB.JSON, preset=HB.PRESET, guiPreset=HB.GUI_PRESET, params=HB.PARAMS, 
-                 log=path.LOG, tmp=path.TMP, cli=HB.CLI, queue=CrossThreadList()):
+    def __init__(self, source, destination, trash, backup, json, preset, guiPreset, params, 
+                 tmp, cli, sublang, log, queue=CrossThreadList()):
         '''
         
         All of the following are DEFAULTS, and can be overriden by the individual item
@@ -113,6 +110,7 @@ class hbQueueManager(object):
         self.guiPreset = guiPreset
         self.preset = preset
         self.params = params 
+        self.sublang = sublang
         self.hb = None
         
         self.tmp = tmp
@@ -230,7 +228,7 @@ class hbQueueManager(object):
                     
                 srts = False
             
-            self.process = hbProcess( source + job['file'], self.tmp + job['target'], srts, preset, guiPreset, json, params )
+            self.process = hbProcess( source + job['file'], self.tmp + job['target'], srts, preset, guiPreset, json, params, self.cli, self.log, self.sublang )
             self.runReport.update( { 'queued': self.queue.length(), 'file': job['target'] })
             self.jobState.set(CONVERTING)
                         
