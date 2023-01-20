@@ -8,6 +8,7 @@ from FootPedal import MAINCONFIG, SHOWCONFIG, LOGDIR, QUEUEFILE
 import CursedUtils as cu
 from HandBrakeUtils.queueManager import hbQueueManager, STOPPING
 import FootPedal.menus as menu
+from HandBrakeUtils.chyron import HandbrakeChyron
 
 class MainMenu(object):
     '''
@@ -15,7 +16,7 @@ class MainMenu(object):
     '''
 
 
-    def __init__(self, window:cu.Screen, qm:hbQueueManager, config:dict ):
+    def __init__(self, window:cu.Screen, qm:hbQueueManager, chyron:HandbrakeChyron, config:dict ):
         '''
         Constructor
         '''
@@ -23,6 +24,7 @@ class MainMenu(object):
         self.qm = qm
         self.fileQueue = qm.queue
         self.config = config
+        self.chyron = chyron
         
         midpoint = int( window.sizeX / 2 )
         
@@ -56,23 +58,30 @@ class MainMenu(object):
         self.keys = cu.KeyResponder()
         self.keys.setResponse('h', self.openHandBrakeConfig)
         self.keys.setResponse('f', self.openFolderConfig)
+        self.keys.setResponse('t', self.openShowMenu)
         self.keys.setResponse('escape', qm.runState.set, args=[STOPPING] )
         
         self.keys.keyLoop(window)
         
         
         
-        
+    def openShowMenu(self):
+        self.chyron.deactivate()
+        x = menu.ShowMenu(self.window)
+        x.close()
+        self.chyron.activate()
         
     def openHandBrakeConfig(self):
-        
+        self.chyron.deactivate()        
         x = menu.HandbrakeConfig(self.window)
         x.runMenu()
         x.close()
+        self.chyron.activate()
         
     def openFolderConfig(self):
-        
+        self.chyron.deactivate()        
         x = menu.PathConfig(self.window)
         x.runMenu()
         x.close()
+        self.chyron.activate()
         
