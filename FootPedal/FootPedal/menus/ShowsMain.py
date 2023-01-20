@@ -8,7 +8,6 @@ from FootPedal import SHOWCONFIG
 import os, json
 
 import CursedUtils as cu
-from pkg_resources._vendor.more_itertools.more import padded
 
 class ShowMenu(cu.Window):
     '''
@@ -18,7 +17,7 @@ class ShowMenu(cu.Window):
         self.configFile = SHOWCONFIG
         self.loadConfig()
         self.keys = cu.KeyResponder()
-        cu.Window.__init__(self, parent, 25, 110, 1, 5)
+        cu.Window.__init__(self, parent)
     
     def loadConfig(self):
         if os.path.isfile( self.configFile):
@@ -31,43 +30,36 @@ class ShowMenu(cu.Window):
             self.saveConfig()
         
     def saveConfig(self):
-        if self.changed:
-            f = open( self.configFile, 'w' )
-            json.dump(self.config, f, indent=1)
-            f.close()
+        f = open( self.configFile, 'w' )
+        json.dump(self.config, f, indent=1)
+        f.close()
         
     def setup(self):
         
-        midpoint = int( self.window.sizeX / 2 )
+        midpoint = int( self.sizeX / 2 )
         
-        self.window.setSlot('title',1, midpoint - 20, 40, cu.CENTER )
-        self.window.slotWrite( 'title', 'Shows Menu' )
+        self.setSlot('title',1, midpoint - 20, 40, cu.CENTER )
+        self.slotWrite( 'title', 'Shows Menu' )
         
-        self.window.setSlot('tvdblabel',3, midpoint - 20, 40, cu.CENTER )
-        self.window.slotWrite( 'tvdblabel', 'TVDB API Information' )
+        self.setSlot('tvdblabel',3, midpoint - 20, 40, cu.CENTER )
+        self.slotWrite( 'tvdblabel', 'TVDB API Information' )
         
-        xAnchor = midpoint - 28
+        xAnchor = midpoint - 24        
+        self.write( 4, xAnchor, 'API Key: ')
+        self.setSlot( 'API Key', 4, xAnchor + 9, 38 )
         
-        self.write( 5, xAnchor, 'API Key: ')
-        
-        xAnchor += 13
-        
-        self.window.setSlot( 'API Key', 5, xAnchor, 36 )
-        
-        xAnchor += 38
-        self.window.write( 5, xAnchor, 'PIN: ')
-        self.window.setSlot( 'PIN', 5, xAnchor + 8, 8 )
+        self.write( 5, xAnchor, 'PIN: ')
+        self.setSlot( 'PIN', 5, xAnchor + 8, 10 )
         
         for field in ['API Key','PIN']:
-            if field in self.config:
-                self.window.slotWrite(field, self.config[field])
-            else:
-                self.config[field] = ''
+            if field not in self.config:
+                self.config[field] = ' '
+            self.slotWrite(field, self.config[field])
                 
         # show list template
-        self.window.write( 7, midpoint - 9, 'Configured Shows' )
+        self.write( 7, midpoint - 9, 'Configured Shows' )
         
-        self.window.setSlot( 'pagecount', 8, midpoint, 22, cu.RIGHT )
+        self.setSlot( 'pagecount', 8, midpoint + 11, 12, cu.RIGHT )
         
         for i in range( 0, 10 ):
             if i == 9:
@@ -75,8 +67,8 @@ class ShowMenu(cu.Window):
             else:
                 key = str( i+1 )                
         
-                self.window.setSlot( 'key' + key, i + 9, midpoint - 22 )
-                self.window.setSlot( 'name' + key, i + 9, midpoint - 20 )
+                self.setSlot( 'key' + key, i + 9, midpoint - 22, 1 )
+                self.setSlot( 'name' + key, i + 9, midpoint - 20, 42 )
                 
         self.setSlot( 'navUp', 19, midpoint - 21, 20 )
         self.setSlot( 'navDown', 19, midpoint + 1, 20, cu.RIGHT )
@@ -93,13 +85,7 @@ class ShowMenu(cu.Window):
         self.listStart = 0
         
         self.setupListMenu()
-    
-    
-    
-    
-    
-    
-    
+        self.keys.keyLoop(self)
     
     
     def setupListMenu(self):
@@ -126,38 +112,38 @@ class ShowMenu(cu.Window):
                 if pageEnd >= totalShows:
                     pageEnd = totalShows - 1
                     
-            if totalShows > 10:
-                self.window.slotWrite( 'pagecount', str( self.listStart + 1 ) + '-' + str( pageEnd + 1 ) + ' of ' + str( totalShows ))
-                
-            if self.listStart > 1:
-                self.window.slotWrite( 'navUp', 'Up/PageUp')
-                self.keys.setResponse( 'pageup', self.listPageUp )
-                self.keys.setResponse( 'up', self.listUp )
-                
-            if self.pageEnd < ( totalShows - 1 ):
-                self.windowSlotWrite( 'navDown', 'Down/PageDown')
-                self.keys.setResponse( 'pagedown', self.listPageDown )
-                self.keys.setResponse( 'down', self.listDown )                
-                
-            i = 0
-            
-            while i < 10 :
-                if i == 9:
-                    key = "0"
-                else:
-                    key = str( i+1 )  
+                if totalShows > 10:
+                    self.slotWrite( 'pagecount', str( self.listStart + 1 ) + '-' + str( pageEnd + 1 ) + ' of ' + str( totalShows ))
                     
-                showname = shows[ self.listStart + i ]
+                if self.listStart > 1:
+                    self.slotWrite( 'navUp', 'Up/PageUp')
+                    self.keys.setResponse( 'pageup', self.listPageUp )
+                    self.keys.setResponse( 'up', self.listUp )
+                    
+                if pageEnd < ( totalShows - 1 ):
+                    self.SlotWrite( 'navDown', 'Down/PageDown')
+                    self.keys.setResponse( 'pagedown', self.listPageDown )
+                    self.keys.setResponse( 'down', self.listDown )                
                 
-                self.writeSlot( 'key' + key, key )
-                self.writeSlot( 'name' + key, showname )
+                i = 0
                 
-                self.keys.setResponse( key, self.editShow, args=[showname] )
-                
-                i += 1
-                
-                if self.listStart + i > pageEnd:
-                    break
+                while i < 10 :
+                    if i == 9:
+                        key = "0"
+                    else:
+                        key = str( i+1 )  
+                        
+                    showname = shows[ self.listStart + i ]
+                    
+                    self.writeSlot( 'key' + key, key )
+                    self.writeSlot( 'name' + key, showname )
+                    
+                    self.keys.setResponse( key, self.editShow, args=[showname] )
+                    
+                    i += 1
+                    
+                    if self.listStart + i > pageEnd:
+                        break
                 
                     
             
@@ -186,9 +172,10 @@ class ShowMenu(cu.Window):
         pass
         
     def tvdbConfig(self):
-        pass
-        
-        
-        
+                
+        for field in ['API Key','PIN']:
+            self.config[field] = self.slotInput(field)
+
+        self.saveConfig()
         
         
