@@ -53,6 +53,6 @@ if __name__ == '__main__':
     
     chyron = HandbrakeChyron(ui, qm)
     
-    main = MainMenu( ui, qm, fileQueue )
+    main = MainMenu( ui, qm, chyron, fileQueue )
     
     ui.close()
