@@ -222,6 +222,10 @@ class KeyResponder(object):
         if key in self.responses:
             del self.responses[key]
             
+    def clearAll(self):        
+        self.responses = {}
+        self.aliases = {}
+            
     def translateKey(self, key ):
         # converts a character or map string to 
         # the corresponding number
