@@ -157,16 +157,38 @@ class ShowMenu(cu.Window):
         pass
         
     def listUp(self):
-        pass
+        showcount = len( self.config['shows'] )
+        self.listStart += 1
+        
+        if self.listStart > showcount - 10:
+            self.listStart = showcount - 10
+            
+        self.setupListMenu()
     
     def listDown(self):
-        pass
+        self.listStart -= 1
+        
+        if self.listStart < 0:
+            self.listStart = 0
+            
+        self.setupListMenu()
     
     def listPageUp(self):
-        pass
+        showcount = len( self.config['shows'] )
+        self.listStart += 10
+        
+        if self.listStart > showcount - 10:
+            self.listStart = showcount - 10
+            
+        self.setupListMenu()
     
     def listPageDown(self):
-        pass
+        self.listStart -= 10
+        
+        if self.listStart < 0:
+            self.listStart = 0
+            
+        self.setupListMenu()
     
     def addShow(self):
         pass
