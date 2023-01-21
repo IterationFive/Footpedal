@@ -69,6 +69,11 @@ class ConfigMenu(cu.Window):
             These are built-in validators that test to see whether something 
             is an existing file or directory, respectively
             
+        .isFileOrNone(validate)
+        .isDirOrNone(validate)
+            
+            Same as the above, except allows for blank entries.
+            
         .layout()
         
             uses the provided title and fields to display the options and
@@ -160,12 +165,26 @@ class ConfigMenu(cu.Window):
             return True
         else:
             return 'Invalid File Name'
+        
+    def isFileOrNone(self, validate):
+        
+        if validate == '': 
+            return True
+        else:
+            return self.isFile( validate )
     
     def isDir(self, validate):
         if os.path.isdir( validate ):
             return True 
         else:
             return 'Invalid Path Name'
+        
+    def isDirOrNone(self, validate):
+        
+        if validate == '': 
+            return True
+        else:
+            return self.isDir( validate )
     
     def layout(self):
         

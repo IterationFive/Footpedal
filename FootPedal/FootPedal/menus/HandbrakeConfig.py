@@ -20,10 +20,3 @@ class HandbrakeConfig(cu.ConfigMenu):
         self.addField('GUI Preset', 40, '(Optional) A Preset Created and named using the GUI' )
         self.addField('JSON Config', 75, '(Optional) A JSON file containing Handbrake configuration', self.isFileOrNone )
         self.addField('Subtitle Language', 40, 'The default language code for subtitle files' )
-        
-    def isFileOrNone(self, validate):
-        
-        if validate == '': 
-            return True
-        else:
-            return self.isFile( validate )
