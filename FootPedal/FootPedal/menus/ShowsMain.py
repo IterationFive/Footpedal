@@ -6,7 +6,7 @@ Created on Jan 19, 2023
 
 from FootPedal import SHOWCONFIG
 import os, json
-
+import FootPedal.menus as menu
 import CursedUtils as cu
 
 class ShowMenu(cu.Window):
@@ -91,59 +91,58 @@ class ShowMenu(cu.Window):
     def setupListMenu(self):
         
         self.keys.clearAll()
+        self.loadConfig()
         # this gets rebuilt every time.
         
-        if 'shows' not in self.config:
-            self.config['shows'] = {}
-        else:
-            shows = []
-            for show in self.config['shows']:
+        shows = []
+        for show in self.config:
+            if type( self.config[show] ) == dict:
                 shows.append( show )
+            
+        # this also gets rebuilt every time.  
+            
+        totalShows = len( shows )
+            
+        if totalShows > 0:
+            #great!  we have work to do
+            
+            pageEnd = self.listStart + 9
+            
+            if pageEnd >= totalShows:
+                pageEnd = totalShows - 1
                 
-            # this also gets rebuilt every time.  
+            if totalShows > 10:
+                self.slotWrite( 'pagecount', str( self.listStart + 1 ) + '-' + str( pageEnd + 1 ) + ' of ' + str( totalShows ))
                 
-            totalShows = len( shows )
+            if self.listStart > 1:
+                self.slotWrite( 'navUp', 'Up/PageUp')
+                self.keys.setResponse( 'pageup', self.listPageUp )
+                self.keys.setResponse( 'up', self.listUp )
                 
-            if totalShows > 0:
-                #great!  we have work to do
+            if pageEnd < ( totalShows - 1 ):
+                self.SlotWrite( 'navDown', 'Down/PageDown')
+                self.keys.setResponse( 'pagedown', self.listPageDown )
+                self.keys.setResponse( 'down', self.listDown )                
+            
+            i = 0
+            
+            while i < 10 :
+                if i == 9:
+                    key = "0"
+                else:
+                    key = str( i+1 )  
+                    
+                showname = shows[ self.listStart + i ]
                 
-                pageEnd = self.listStart + 9
+                self.slotWrite( 'key' + key, key )
+                self.slotWrite( 'name' + key, showname )
                 
-                if pageEnd >= totalShows:
-                    pageEnd = totalShows - 1
-                    
-                if totalShows > 10:
-                    self.slotWrite( 'pagecount', str( self.listStart + 1 ) + '-' + str( pageEnd + 1 ) + ' of ' + str( totalShows ))
-                    
-                if self.listStart > 1:
-                    self.slotWrite( 'navUp', 'Up/PageUp')
-                    self.keys.setResponse( 'pageup', self.listPageUp )
-                    self.keys.setResponse( 'up', self.listUp )
-                    
-                if pageEnd < ( totalShows - 1 ):
-                    self.SlotWrite( 'navDown', 'Down/PageDown')
-                    self.keys.setResponse( 'pagedown', self.listPageDown )
-                    self.keys.setResponse( 'down', self.listDown )                
+                self.keys.setResponse( key, self.editShow, args=[showname] )
                 
-                i = 0
+                i += 1
                 
-                while i < 10 :
-                    if i == 9:
-                        key = "0"
-                    else:
-                        key = str( i+1 )  
-                        
-                    showname = shows[ self.listStart + i ]
-                    
-                    self.writeSlot( 'key' + key, key )
-                    self.writeSlot( 'name' + key, showname )
-                    
-                    self.keys.setResponse( key, self.editShow, args=[showname] )
-                    
-                    i += 1
-                    
-                    if self.listStart + i > pageEnd:
-                        break
+                if self.listStart + i > pageEnd:
+                    break
                 
                     
             
@@ -154,7 +153,14 @@ class ShowMenu(cu.Window):
         
         
     def editShow(self, showname):
-        pass
+        x =  menu.ShowEdit( self, showname )
+        x.close()
+        self.setupListMenu()
+    
+    def addShow(self):
+        x = menu.ShowEdit( self )
+        x.close()
+        self.setupListMenu()
         
     def listUp(self):
         showcount = len( self.config['shows'] )
@@ -189,9 +195,6 @@ class ShowMenu(cu.Window):
             self.listStart = 0
             
         self.setupListMenu()
-    
-    def addShow(self):
-        pass
         
     def tvdbConfig(self):
                 
