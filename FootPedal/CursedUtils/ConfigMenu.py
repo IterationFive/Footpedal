@@ -51,6 +51,8 @@ class ConfigMenu(cu.Window):
             a function or method that takes input and tests it to make
             sure it meets desired standards.  A validator should return
             True or an error string, which will be displayed on screen. 
+            
+    A line of text can be added using .addText(text).
     
     Once configured the menu can be invoked with .runMenu() or .firstRun().  
     
@@ -153,6 +155,9 @@ class ConfigMenu(cu.Window):
             f.close()
         self.changed = False
         
+    def addText(self, text):
+        self.fields.append( ['False', text] )
+        
     def addField(self, label, width, description='', validator=None):
         self.fields.append( [label, width, description, validator])
         if width > self.maxField:
@@ -213,9 +218,14 @@ class ConfigMenu(cu.Window):
             
             field = self.fields[i]
             
-            self.write( y, labelanchor - len( field[0]), field[0])
-            self.setSlot( field[0], y, fieldanchor, field[1] )
-            self.keys.setResponse( str(i+1), self.editField, args=[i] )
+            if field[0] == False:
+                x = int( ( self.sizeX - len(field[1]) ) / 2 ) 
+                self.write( y, x, field[1] )
+            else:
+                self.write( y, labelanchor - len( field[0]), field[0])
+                self.setSlot( field[0], y, fieldanchor, field[1] )
+                self.keys.setResponse( str(i+1), self.editField, args=[i] )
+            
             i += 1
             y += self.tableSpacing
             
