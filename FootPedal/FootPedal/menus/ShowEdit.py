@@ -49,11 +49,25 @@ class ShowEdit(cu.ConfigMenu):
             self.addText('')
             self.addText('Press R to Rename Show     Press D to Delete Show' )
             
-            # add key responses for R and D
+            self.keys.setResponse('r', self.renameShow)
+            self.keys.setResponse('d', self.deleteShow)
             
             self.runMenu()
             
-            
+    def renameShow(self):
+        
+        r = self.slotInput( 'menutitle' )
+        
+        self.config[r] = self.config[self.title]
+        del self.config[self.title]
+        self.configKey = r
+        self.title = r 
+        
+        self.saveConfig()
+    
+    def deleteShow(self):
+        del self.config[self.title]
+        self.saveAndExit()
         
     def createProfile(self):
         
