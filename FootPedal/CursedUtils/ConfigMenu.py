@@ -16,22 +16,17 @@ class ConfigMenu(cu.Window):
     This class can be used by itself to create and manage simple configuration
     options held as a dictionary (that may or may not contain sub-dictionaries) 
     and stored in a JSON file.
-    
-    The constructor takes the following arguments:
-    
+        
         parent: 
             a cursedUtils.Screen object.
-            
-        title:
-            The label at the top of the screen
-            
-        key:
-            if not None, the object will work with a subdictionary by this name
-            if None, the object will work with keys in the top-level dictionary
-            
-        height,width,y,x
-            passed to the cu.Window constructor
-            
+        
+        tablespacing:
+            default 1
+            the distance in lines between items in the menu.  The default
+            of 1 places a line between each item.  
+            Eventually this will default to zero, but I'll
+            have other code to update for that.
+        
         configFile
             the JSON file where the data will be stored in a pretty indented fashion.
             
@@ -115,7 +110,7 @@ class ConfigMenu(cu.Window):
             and validates the results.  If results fail validation, error message is shown
             and the user is prompted again
             
-        .fillslots()
+        .fillSlots()
             utility function to populate the slots of the layout with the corresponding
             configuration values.
             
@@ -124,9 +119,10 @@ class ConfigMenu(cu.Window):
     
     '''
 
-    def __init__(self, parent:cu.Screen, configFile=MAINCONFIG):
+    def __init__(self, parent:cu.Screen, tableSpacing = 1, configFile=MAINCONFIG):
         
         self.configFile=configFile
+        self.tableSpacing = tableSpacing
         self.fields = []
         self.maxField = 0
         self.maxLabel = 0
@@ -208,7 +204,6 @@ class ConfigMenu(cu.Window):
         self.setSlot('error', 5, 1, self.sizeX - 2, cu.CENTER)
         
         self.tableY = 7
-        self.tableSpacing = 2
         
         y = self.tableY
         
@@ -227,7 +222,7 @@ class ConfigMenu(cu.Window):
                 self.keys.setResponse( str(i+1), self.editField, args=[i] )
             
             i += 1
-            y += self.tableSpacing
+            y += self.tableSpacing + 1
             
         self.setSlot( 'menuoption1', y, 1, self.sizeX - 2, cu.CENTER )
         self.setSlot( 'menuoption2', y+1, 1, self.sizeX - 2, cu.CENTER )
