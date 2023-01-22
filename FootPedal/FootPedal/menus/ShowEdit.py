@@ -13,9 +13,8 @@ class ShowEdit(cu.ConfigMenu):
     classdocs
     '''
     
-    def __init__(self, parent:cu.Screen, show, db):
+    def __init__(self, parent:cu.Screen, show):
         self.show = show
-        self.db = db            # an instance of tvdb_v4_official.TVDB
         cu.ConfigMenu.__init__(self, parent, configFile=SHOWCONFIG)
     
     def setup(self):
