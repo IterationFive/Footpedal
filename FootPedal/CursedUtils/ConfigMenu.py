@@ -93,12 +93,16 @@ class ConfigMenu(cu.Window):
             
             if the file does not exist, it will be created.
         
-        .saveConfig()
-        
-            if any changes have been made, this will rewrite the configuration file.
+        .saveConfig(forced)
+                forced- boolean, defaults False
+                    
+            if any changes have been made or forced is true, this will rewrite the configuration file.
             
-        .saveAndExit()
-            the default option for saving and exiting.
+            
+        .saveAndExit(forced)
+                forced- boolean, defaults False
+            the default option for saving and exiting; will not save if no changes
+            have been made unless forced is True
             
             (Note that there is no 'cancel' function, as it requires no action, and
             the keyresponder exits on Escape by default.)
@@ -144,15 +148,15 @@ class ConfigMenu(cu.Window):
             
         self.changed = False
         
-    def saveConfig(self):
-        if self.changed:
+    def saveConfig(self, forced = False):
+        if self.changed or forced:
             f = open( self.configFile, 'w' )
             json.dump(self.config, f, indent=1)
             f.close()
         self.changed = False
         
     def addText(self, text):
-        self.fields.append( ['False', text] )
+        self.fields.append( [False, text] )
         
     def addField(self, label, width, description='', validator=None):
         self.fields.append( [label, width, description, validator])
@@ -258,7 +262,7 @@ class ConfigMenu(cu.Window):
         
         while i < len( self.fields ):
             self.write( y, self.leftpoint, str(i+1))
-            y += self.tableSpacing
+            y += self.tableSpacing + 1
             i += 1
             
         self.slotWrite( 'menuoption1', 'Press a number to change the corresponding value' )
@@ -267,8 +271,8 @@ class ConfigMenu(cu.Window):
         self.keys.keyLoop(self.window)
         
         
-    def saveAndExit(self):
-        self.saveConfig()
+    def saveAndExit(self, forced=False):
+        self.saveConfig(forced)
         self.keys.keepLooping = False
 
     def editField(self, index ):
