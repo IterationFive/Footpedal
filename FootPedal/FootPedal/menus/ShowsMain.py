@@ -53,7 +53,7 @@ class ShowMenu(cu.Window):
         
         for field in ['API Key','PIN']:
             if field not in self.config:
-                self.config[field] = ' '
+                self.config[field] = ''
             self.slotWrite(field, self.config[field])
                 
         # show list template
