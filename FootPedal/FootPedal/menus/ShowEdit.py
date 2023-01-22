@@ -49,8 +49,8 @@ class ShowEdit(cu.ConfigMenu):
             self.addText('')
             self.addText('Press R to Rename Show     Press D to Delete Show' )
             
-            self.keys.setResponse('r', self.renameShow)
-            self.keys.setResponse('d', self.deleteShow)
+            self.keys.setResponse('r', self.renameShow )
+            self.keys.setResponse('d', self.deleteShow )
             
             self.runMenu()
             
@@ -58,16 +58,16 @@ class ShowEdit(cu.ConfigMenu):
         
         r = self.slotInput( 'menutitle' )
         
-        self.config[r] = self.config[self.title]
-        del self.config[self.title]
+        self.config[r] = self.config[self.configKey]
+        del self.config[self.configKey]
         self.configKey = r
         self.title = r 
         
-        self.saveConfig()
+        self.saveConfig(True)
     
     def deleteShow(self):
-        del self.config[self.title]
-        self.saveAndExit()
+        del self.config[self.configKey]
+        self.saveAndExit(True)
         
     def createProfile(self):
         
@@ -106,7 +106,9 @@ class ShowEdit(cu.ConfigMenu):
                 return False
             
             if self.confirmShowTitle(r):
+                self.show = r
                 self.config[r] = { 'rgx':r, 'Outbox':'', 'Backup':'', 'Preset':'', 'GUI Preset':'', 'JSON Config':'', 'Subtitle Language':'' }
+                self.saveConfig(True)
                 return True
         
     def createTVDBprofile(self):
@@ -132,19 +134,22 @@ class ShowEdit(cu.ConfigMenu):
                     continue
                 else:
                     if self.confirmShowTitle(show.name):
+                        self.show = show.name
                         self.config[show.name] = { 'tvdb': int(r),'rgx':show.name, 'Outbox':'', 'Backup':'', 
                                                   'Preset':'', 'GUI Preset':'', 'JSON Config':'', 'Subtitle Language':'' }
+                        self.saveConfig(True)
+                        return True
                     else:
                         continue
             else:
                 # manual setup
                 if self.confirmShowTitle(r):
-                        self.config[r] = { 'rgx':r, 'Outbox':'', 'Backup':'', 'Preset':'', 'GUI Preset':'', 'JSON Config':'', 'Subtitle Language':'' }
+                    self.show = r
+                    self.config[r] = { 'rgx':r, 'Outbox':'', 'Backup':'', 'Preset':'', 'GUI Preset':'', 'JSON Config':'', 'Subtitle Language':'' }
+                    self.saveConfig(True)
+                    return True
                 else:
                     continue
-
-        self.saveConfig()
-        return True
     
     def confirmShowTitle(self, title ):
         
@@ -161,6 +166,8 @@ class ShowEdit(cu.ConfigMenu):
                 x = False
             else:
                 continue
+            
+            break
             
         self.slotBlank('response1')
         self.slotBlank('response2', True )
