@@ -10,10 +10,17 @@ from lib.ShowLookup import TVShow
 
 class ShowEdit(cu.ConfigMenu):
     '''
-    classdocs
+    Gives the ability to create and/or edit a television show profile.
+    
+    The constuctor requires a cu.Screen or cu.Window object, and
+    optionally the name of the show.  If the name of the show is not
+    provided, the user will be prompted to set up the profile
+    for the first time, either manually or with a TVDB id.
+    
+    
     '''
     
-    def __init__(self, parent:cu.Screen, show):
+    def __init__(self, parent:cu.Screen, show=None):
         self.show = show
         cu.ConfigMenu.__init__(self, parent, configFile=SHOWCONFIG)
     
@@ -23,6 +30,10 @@ class ShowEdit(cu.ConfigMenu):
             go = self.createProfile()
         else:
             go = True
+            
+        # if go is False, that means that the user started to setup a profile
+        # then changed their mind.  So, we don't have to go to all 
+        # the trouble below.
         
         if go:    
             self.configKey=self.show
@@ -58,11 +69,31 @@ class ShowEdit(cu.ConfigMenu):
         self.setSlot( 'response2', y + 3, midpoint - 25, 50, cu.CENTER )
         
         if self.config['API Key'] != '' and self.config['PIN'] != '' :
-            self.createTVDBprofile()
+            r = self.createTVDBprofile()
         else:
-            # no lookup involved
-            pass
-        # cleanup display and drop back to setup(), which will launch runMenu() 
+            r = self.createManualProfile()
+    
+        self.window.clear()
+        self.slot = {}
+        return r
+         
+        
+    def createManualProfile(self):
+        
+        self.slotWrite('blurb2', 'Enter the show name as you want it to appear in file names.', True )
+        
+        while True:
+            
+            r:str = self.slotInput('input')
+            self.slotBlank('response1')
+            self.slotBlank('response2')
+            
+            if r=='':
+                return False
+            
+            if self.confirmShowTitle(r):
+                self.config[r] = { 'rgx':r, 'Outbox':'', 'Backup':'', 'Preset':'', 'GUI Preset':'', 'JSON Config':'', 'Subtitle Language':'' }
+                return True
         
     def createTVDBprofile(self):
         
@@ -99,7 +130,7 @@ class ShowEdit(cu.ConfigMenu):
                     continue
 
         self.saveConfig()
-        return False
+        return True
     
     def confirmShowTitle(self, title ):
         
@@ -124,43 +155,4 @@ class ShowEdit(cu.ConfigMenu):
     
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        '''
-        prompt = 'Enter the show\'s name (as you want it in the filename)'
-        self.write( y, midpoint - int( prompt/2 ), prompt )
-        y += 1
-        
-        if len( self.config['API Key'] ) > 30:
-            prompt = 'or the TVDB id number'
-            self.write( y, midpoint - int( prompt/2 ), prompt )
-            y += 1
-            
-        y+1
-        
-        self.setSlot( 'response1', y + 3, midpoint - 20, 40  )
-        self.setSlot( 'response2', y + 4, midpoint - 20, 40  )
-        self.setSlot( 'response2', y + 4, midpoint - 20, 40  )
-        
-        prefill = ''
-            
-        while True:
-            r:str = self.lineInput(y, midpoint -10, 20, prefill )
-            
-            if r.isdigit() and len( self.config['API Key'] ) > 30:
-                
-                show = TVShow( int(r), self.config['API Key'], self.config['PIN'] )'''
-                
                 
