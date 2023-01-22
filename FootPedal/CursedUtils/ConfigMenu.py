@@ -189,7 +189,9 @@ class ConfigMenu(cu.Window):
     
     def layout(self):
         
-        self.write( 1, int( ( self.sizeX - len( self.title ) ) / 2 ), self.title )
+        self.setSlot( 'menutitle', 1, int( self.sizeX / 2 ) - 35, 70, cu.CENTER)
+                
+        self.slotWrite( 'menutitle', self.title )
         
         self.leftpoint = int( ( self.sizeX - ( self.maxLabel + self.maxField + 5 ) ) / 2 )
         # The five is to account for the option key + 2 spaces each between columns
