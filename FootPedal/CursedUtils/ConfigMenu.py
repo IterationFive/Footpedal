@@ -215,6 +215,8 @@ class ConfigMenu(cu.Window):
         
         i = 0
         
+        offset = 0
+        
         while i < len( self.fields ):
             
             field = self.fields[i]
@@ -222,10 +224,11 @@ class ConfigMenu(cu.Window):
             if field[0] == False:
                 x = int( ( self.sizeX - len(field[1]) ) / 2 ) 
                 self.write( y, x, field[1] )
+                offset += 1
             else:
                 self.write( y, labelanchor - len( field[0]), field[0])
                 self.setSlot( field[0], y, fieldanchor, field[1] )
-                self.keys.setResponse( str(i+1), self.editField, args=[i] )
+                self.keys.setResponse( str(i+1-offset), self.editField, args=[i] )
             
             i += 1
             y += self.tableSpacing + 1
@@ -259,9 +262,12 @@ class ConfigMenu(cu.Window):
             
         i = 0
         y = self.tableY
-        
+        offset = 0
         while i < len( self.fields ):
-            self.write( y, self.leftpoint, str(i+1))
+            if self.fields[i][0]== False:
+                offset += 1
+            else:
+                self.write( y, self.leftpoint, str(i+1-offset))
             y += self.tableSpacing + 1
             i += 1
             
