@@ -5,7 +5,6 @@ Created on Jan 23, 2023
 '''
 
 import curses
-from pip._vendor.typing_extensions import Self
 
 class Screen(object):
     '''
