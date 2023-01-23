@@ -17,6 +17,7 @@ BOTTOM = 1
 DOWN = 1
 
 AUTO = -2
+MAX = -3
 
 from CursedUtils.tools import *
 from CursedUtils.Screen import Screen
