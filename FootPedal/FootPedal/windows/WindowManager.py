@@ -2,6 +2,21 @@
 Created on Jan 22, 2023
 
 @author: Cather Steincamp
+
+
+These classes allow for arranging text in a curses window in a manner similar to,
+but not necessarily identical to, a table.
+
+Terminology subject to change.
+
+
+
+
+
+
+
+
+
 '''
 
 import CursedUtils as cu
@@ -9,16 +24,16 @@ import CursedUtils as cu
 ENTRY = 0
 LINE = 1
 
-class Grid(cu.Window):
+class WindowManager(cu.Window):
     '''
     
     '''
     def __init__(self, parent:cu.Screen, height=None, width=None, y=0, x=0):
         cu.Window.__init__(self, parent, height=height, width=width, y=y, x=x)
         self.block = []
-        self.updateBlock = False # used 
         
-        # calculate parent size without 
+        # calculate parent size without depending on CursedUtils.Screen methods
+        # to allow for maximum portability
 
 
 class Block( object ):
@@ -85,14 +100,30 @@ class Block( object ):
         
 class Cell( object ):
     '''
+        A virtual container that contains lines of text.  
+    
+    
+    
     
     '''
     
-    def __init__(self, block:Block, height=cu.AUTO, width=cu.AUTO, yAlign=cu.LEFT, xAlign=cu.TOP, span=1, padding = None):
+    def __init__(self, block:Block, height=cu.AUTO, width=cu.AUTO, yAlign=cu.TOP, xAlign=cu.CENTER, span=1, padding = None):
         '''
             block
                 the parent Block object that manages this container
-            
+            height, width
+                int, cu.AUTO, cu.MAX
+            yAlign
+                how the contents are aligned vertically within the cell
+            xAlign
+                how the contents as a whole (not individual lines) are aligned in the cell
+            span
+                similar to the rowspan propery in CSS.  
+                this is really only useful when there are multiple cells, all being sized automatically.
+            padding
+                the number of extra spaces on the outer edges. 
+                it is important to note that these are strictly enforces and content that 
+                would otherwise exceed these boundaries will be truncated and/or omitted
         
         '''
         
