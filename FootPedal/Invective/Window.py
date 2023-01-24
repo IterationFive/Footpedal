@@ -50,6 +50,12 @@ class Window(Screen):
             parent - refers to the parent invective screen or window object
                      (the parent window object can be accessed via parent.cursewin)
         
+        The following functions have been updated to use the functionality of a 
+        window, rather than a screen:
+        
+            setSize()
+            close()
+            reopen()
         
             
         
