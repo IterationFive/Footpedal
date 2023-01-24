@@ -11,3 +11,7 @@ DOWN = 1
 
 AUTO = -2
 MAX = -3
+
+from Invective.Screen import Screen
+from Invective.Window import Window
+from Invective.Panel import Panel
