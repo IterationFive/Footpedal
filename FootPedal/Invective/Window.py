@@ -5,6 +5,7 @@ Created on Jan 23, 2023
 '''
 import curses
 from Invective.Screen import Screen
+from pickle import FALSE
 
 class Window(Screen):
     '''
@@ -37,6 +38,8 @@ class Window(Screen):
         This class duplicates the following properties from Screen:
             ySize,xSize
             yOffset,xOffset
+            height, width
+            padding, border
             
         The following properties are recreated
             stdscr - refers to the top-level curses screen object
@@ -63,8 +66,13 @@ class Window(Screen):
         self.stdscr = parent.stdscr     # the curses screen object
         self.screen = parent.screen     # the Invective Screen object that encapsulates it
         
+        self.border = border
+        self.padding = padding
+        
         self.sizeY = height
         self.sizeX = width
+        self.height = height
+        self.width = width
         
         self.offsetY = 0
         self.offsetX = 0
@@ -72,13 +80,18 @@ class Window(Screen):
         if subwindow:
             self.cursewin = parent.cursewin.subwin( height, width, y, x )
         else:
-            self.cursewin = curses.newwin( height, width, y, x ) 
+            self.cursewin = curses.newwin( height, width, y, x )
+            
+        self.defineBorder()
+        self.addPadding()
 
         self.setup()
     
     def setSize(self, y, x, clear=False ):
         self.sizeY = y
         self.sizeX = x
+        self.height = y
+        self.width = x
         self.cursewin.resize( y,x )
         
         if clear:
