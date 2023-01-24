@@ -5,7 +5,6 @@ Created on Jan 23, 2023
 '''
 import curses
 from Invective.Screen import Screen
-from pickle import FALSE
 
 class Window(Screen):
     '''
