@@ -51,24 +51,26 @@ class Screen(object):
                     upper right corner
                     bottom left corner
                     
-                additionally, padding will automatically be added to prevent accidental 
+                additionally, padding will automatically be applied to prevent accidental 
                 overwriting of the border.  
+                
             padding
                 allows you to specify margins.  
                 Again, there are several ways to do this.  
                 
                 If you provide a single number, that number of spaces will be applied to all four borders.
                 
-                Alternately you can provide a list or tuple of (y,x).
+                If you provide a tuple of (y,x), the first value will set equal padding on the top
+                and bottom, and the second value will set equal padding for left and right.
                 
-                    if y is a single value, that number of spaces will be applied to both top and bottom.
-                    if y is a tuple, the first number will be applied to the top, and the second to the bottom.
-                    for x, it works the same way, except the first number is left and the second is right.
+                alternately, you can provide one or both of the values above as a tuple:
+                    ( (top, bottom), (left, right) ) 
+                    ( x, (left, right ) 
                     
                 see write() for more details
                 
                 
-        Each Object has the following properties:
+        Each object has the following properties:
         
             stdscr
                 this is the curses screen object.  
@@ -85,14 +87,25 @@ class Screen(object):
                 but this value will always point to the main screen object
             ySize,xSize
                 the available dimensions of the screen
+            height, width
+                the actual dimensions of the screen
             echo
                 boolean, reflects whether keystrokes are currently echoing
+                note that this property does not exist in Window objects,
+                which instead paint back to the parent screen.
             cursorState
                 boolean, reflects whether the cursor is visible
+                note that this property does not exist in Window objects,
+                which instead paint back to the parent screen.
             xOffset, yOffset
                 Used here to adjust for border and/or padding.
+            slot
+                a dictionary to be used by the slot functionality.
                 
-        The following methods have been provided:
+        The following methods have been provided for screen management:
+        
+            (Note: any method with a parameter of refresh will automatically
+            refresh the screen upon completion if that value is provided as True.)
         
             setup()
             
@@ -101,17 +114,64 @@ class Screen(object):
                 
             refresh(refresh)
                 defaults to True
-                This is a wrapper for curses' 
+                This executes cursewin.refresh() if "refresh" is True 
                 
             setSize(y, x, refresh)
-            
-                Used to resize the screen object.  A
+                Used to resize the screen object.  also calls .defineBorder() and .addPadding() 
 
-                
             showCursor( state )
                 boolean, defaults to True
                 determines if the cursor is on or off
+                notes change in .cursorstate
+                
+            setEcho( echo )
+                boolean, defaults to True
+                enables or disables keyboard echo
+                notes the change in .echo
+                
+            close()
+                shuts down the curses screen and returns the user to the terminal
+                
+            reopen()
+                repoens the terminal screen and, if necessary, readjusts the size.
+                
         
+        The following methods are simply wrappers for window or curses functionality.
+        
+            keypad( flag )
+            nodelay( flag )
+            getch()
+            napms( ms)
+            
+        The following methods are used for displaying text on the screen.  
+        
+        In all cases, the y and x coordinates are adjusted using yOffset and xOffset,
+        so they refer not to the position on the window, but to the position within the
+        usable area of the window.  For example, a 30x120 window with a border and 
+        padding of 1 on all four sides has a usuable area of 26x116, and 0,0 
+        refers to the top left corner of the usable area-- which in this case is 
+        actually 2,2 on the window itself.
+        
+        Additionally, none of these functions will allow text to be written outside 
+        this usable are. Text that falls partially within the usable area will be 
+        truncated.
+        
+            write(y,x,text,refresh)
+                writes the provided text at the given coordinates            
+        
+            setCursor(y,x)
+                moves the cursor to the given coordinates
+                
+            writeHere( text, refresh )
+                writes the text at the current location.
+                
+            writeRight( y, text, x, refresh )
+                aligns text to the right on the specified line, using x as the ending point.  
+                if x is not provided, uses the rightmost edge of the screen
+                
+            writeCenter(y, text, midpoint, refresh )
+                centers the text along the provided midpoint or, if no midpoint is
+                provided, the center most point of the screen.
         
         
     '''
@@ -135,12 +195,19 @@ class Screen(object):
         self.yOffset = 0
         self.xOffset = 0
         
-        # this is lazy, fix this
+        self.slot = {}
         
-        if width is not None or height is not None:
+        yNow, xNow = self.cursewin.getmaxyx()
+        
+        if height is None and width is None:
+            self.ySize, self.xSize = yNow, xNow
+            self.height, self.width = yNow, xNow
+        elif height is None: 
+            self.setSize( yNow, width )
+        elif width is None:
+            self.setSize( height, xNow )
+        else:
             self.setSize( height, width )
-        else:             
-            self.ySize, self.xSize = self.window.getmaxyx()
             
         self.setup()
             
@@ -197,6 +264,8 @@ class Screen(object):
     def setSize(self, y, x, clear=False): 
         self.ySize = y
         self.xSize = x
+        self.height = y 
+        self.width = x
         
         curses.resize_term( y, x )
         
@@ -210,21 +279,19 @@ class Screen(object):
         if refresh:
             self.window.refresh()
         
-    # the following functions are just pointers to curses or window functionality.
-            
     def napms(self, ms):
         curses.napms( ms )
         
-    def keypad(self, val):
-        self.cursewin.keypad( val )
+    def keypad(self, flag):
+        self.cursewin.keypad( flag )
         
-    def nodelay(self, val ):
-        self.cursewin.nodelay( val )
+    def nodelay(self, flag ):
+        self.cursewin.nodelay( flag )
         
     def getch(self):
         self.cursewin.getch()
         
-    def setEcho(self, echo ):
+    def setEcho(self, echo=True ):
         if echo == False:
             curses.noecho()
             self.screen.echo = False
@@ -242,7 +309,7 @@ class Screen(object):
             self.screen.cursorState = False
             
     def setCursor(self, y,x):
-        self.cursewin.move(y,x)
+        self.cursewin.move(y + self.yOffset, x+self.xOffset )
         
     def close(self):
         curses.endwin()
@@ -250,7 +317,66 @@ class Screen(object):
     def reopen(self):
         self.window.refresh()
         
-        if self.sizeY != None :
-            curses.resize_term( self.sizeY, self.sizeX )
+        yNow, xNow = self.cursewin.getmaxyx()
+        
+        if self.height != yNow or self.width != xNow :
+            curses.resize_term( self.height, self.width )
+            
+    def write(self, y, x, text, refresh=False ):
+        
+        text = str( text )
+            
+        if x < 0 and len( text ) > 0 - x:
+            # truncate from the left
+            text = text[0-x:]
+            x = 0
+        
+        if y < self.ySize and y >= 0 and x < self.xSize and x >= 0:
+        # we are at least starting within the border of the screen
+        
+            if x + len( text ) >= self.xSize:
+                # truncate from the right
+                overshot = x + len(text) - self.xSize
+                text = text[0:-overshot]
+            
+            self.cursewin.addstr( self.yOffset + y, self.xOffset + x, text )
+    
+            if refresh:
+                self.cursewin.refresh()
+                
+                
+        
+    def writeRight(self, y, text, x=None, refresh=False):
+        
+        if x is None:
+            x = self.xSize - 1
+        
+        start = x - ( len(text) - 1 )
+
+        self.write( y,start,text,refresh )
+        
+                
+    def writeCenter(self, y, text, refresh=False, midpoint=None):
+        
+        if midpoint is None:
+            x = int( ( self.xSize - len(text) ) / 2 )
+        else:
+            x = midpoint - int( len( text ) / 2 )
+            
+            if len( text ) % 2 == 1:
+                # restores the conventional bias of rounding
+                # to the left, rather than the right
+                x -= 1
+            
+        self.write( y,x, text, refresh )
+        
+    def writeHere(self, text, refresh=False):
+        
+        y,x = self.cursewin.getyx()
+        
+        y -= self.yOffset
+        x -= self.xOffset
+        
+        self.write( y,x, text, refresh)
         
         
