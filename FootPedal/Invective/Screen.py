@@ -101,6 +101,10 @@ class Screen(object):
                 Used here to adjust for border and/or padding.
             slot
                 a dictionary to be used by the slot functionality.
+            border
+                the options provided to the constructor for the border
+            padding 
+                the options provided to the constructor for padding
                 
         The following methods have been provided for screen management:
         
