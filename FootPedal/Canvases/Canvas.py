@@ -2,7 +2,18 @@
 Created on Jan 24, 2023
 
 @author: Cather Steincamp
-        
+                
+'''
+from curses.textpad import rectangle, Textbox
+import Canvases as cv
+
+class Canvas(object):
+    '''
+    
+    A Canvas object provides tools for working with a section or the entirity of a curses window.
+    
+    The contructor takes the following parameters.  all but the first are optional.  
+    
             cursewin
                 the actual curses window or screen object
             
@@ -75,22 +86,17 @@ Created on Jan 24, 2023
                 if a value is not specified, then it will be
                 retrieved from cursewin.
                 
-'''
-import curses.textpad.rectangle as rectangle
-import curses.textpad.Textbox as Textbox
-import Canvases as can
-
-class Canvas(object):
-    '''
-     classdocs
-    '''
-
-
-    def __init__(self, cursewin, margin=0, border=False, parent=None, size=(None,None), home=(None,None)):
-        '''
-        Constructor
+            home 
+                tuple (x,y)
+                
+                the cursewin coordinates of the upper left hand corner
+                of the area handled by this object
+                
         
-        properties
+        Properties:
+        
+            cursewin, margin, border, parent
+                the objects and values provided to the constructor
             
             yOuter, xOuter 
                 The actual dimensions of the area of the canvas
@@ -103,9 +109,100 @@ class Canvas(object):
             yOffset, xOffset
                 The curses coordinates of the upper left hand corner
                 of the available area
-            
+                
+                
+            slot
+                a dictionary for use by the slot functionality
+                
+        General Methods:
         
+            Canvas.getActualSize()
+                returns a tuple of (yOuter,xOuter)
+                
+            Canvas.getAvailableSize()
+                returns a tuple of (ySize, xSize)
+                
+            Canvas.determineAvailableArea()
             
+                uses yHome, xHome, yOuter, xOuter, margin, and border properties
+                to calculate ySize, xSize, yOffset, and xOffset
+                
+            Canvas.drawBorder()
+            
+                if border is not False, draws the border as configured,
+                using cursewin.box(), cursewin.border(), curses.textpad.rectangle(), 
+                or by simply writing the provided characters to the screen.
+        
+            Canvas.offset( y, x )
+            
+                Translates the local coordinates-- which refer to the available
+                area of the screen-- into the coordinates used by curses.
+                
+                Unless otherwise specified, all methods below run the 
+                coordinates through this method, either directly 
+                or by calling Canvas.write().
+                
+            Canvas.moveCursor( y, x )
+
+                Moves the cursor to the specified coordinates within
+                the available area
+            
+            
+                
+        Write Methods:
+        
+            Canvas.write( y, x, text, refresh=False )
+            
+                writes the text at the specified coordinates and, if 
+                refresh is True, refreshes the window.              
+                                
+                Additionally, Canvas.write() makes sure that the text is not 
+                written outside the available area, either by truncating the text
+                or not writing it at all.
+                
+                If: 
+                    the y coordinate is less than zero
+                    the y coordinate is equal to or greater than self.ySize
+                    the x coordinate is equal to or greater than self.xSize
+                    the x coordinate is less than zero by an amount
+                        more than the length of the text 
+                    
+                then no attempt will be made to write the text.
+                
+                If the x coordinate is less than zero by an amount less than
+                the length of the text, the text will be trimmed from the left
+                and x will be adusted to zero.
+                
+                If the x coordinate is otherwise acceptable, but the text 
+                would extend outside the allowed area, then the text
+                will be trimmed from the right.
+                
+                It should be noted that, unless otherwise specified,
+                all methods of Canvas use this method to write text,
+                and if they have a refresh parameter, that value is
+                passed directly to Canvas.write().  
+                
+            Canvas.writeRight(y, text, x=None, refresh=False)
+            
+                Aligns the text to the right edge of the screen,
+                or if an x-coordinate is given, the text will be 
+                positioned so that the last character will be
+                at that coordinate.
+                
+            Canvas.writeCenter(y, text, midpoint=None, refresh=False)
+                Centers the text on the given line.
+                If a midpoint is specified, the text will be centered
+                along that coordinate instead.
+                
+            Canvas.writeHere(text, refresh=False)
+                Writes the text at the current cursor position.
+        
+    '''
+
+
+    def __init__(self, cursewin, margin=0, border=False, parent=None, size=(None,None), home=(None,None)):
+        '''
+        Constructor
         '''
         
         self.cursewin=cursewin 
@@ -144,7 +241,7 @@ class Canvas(object):
     def getAvailableSize(self):
         return self.ySize, self.xSize    
     
-    def calculateOffsets(self):
+    def determineAvailableArea(self):
         
         self.yOffset=self.yHome
         self.xOffset=self.xHome
@@ -221,6 +318,13 @@ class Canvas(object):
                         self.cursewin.addstr( self.yHome + + self.Outer - 1, self.xHome + self.xSize - 1, self.border[7] ) # bottom right
                         
                     # else: value for border is messed up, no border will be drawn
+                    
+                    
+    def offset(self,y,x):
+        return self.yOffset + y, self.xOffset + x
+    
+    def moveCursor(self,y,x):
+        self.cursewin.move( *self.offset(y, x) )
             
     def write(self, y, x, text, refresh=False ):
         
@@ -239,7 +343,7 @@ class Canvas(object):
                 overshot = x + len(text) - self.xSize
                 text = text[0:-overshot]
             
-            self.cursewin.addstr( self.yOffset + y, self.xOffset + x, text )
+            self.cursewin.addstr( *self.curseCoordinates(y,x), text )
     
             if refresh:
                 self.cursewin.refresh()
