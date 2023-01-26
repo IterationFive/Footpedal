@@ -132,6 +132,8 @@ class Canvas(object):
                 if border is not False, draws the border as configured,
                 using cursewin.box(), cursewin.border(), curses.textpad.rectangle(), 
                 or by simply writing the provided characters to the screen.
+                
+                automatically refreshes the screen.
         
             Canvas.offset( y, x )
             
@@ -146,6 +148,13 @@ class Canvas(object):
 
                 Moves the cursor to the specified coordinates within
                 the available area
+                
+            Canvas.refresh( flag=True )
+            
+                calls cursewin.refresh() so long as flag is true.
+                
+                It should be noted that any methods that have a "refresh"
+                parameter pass that parameter to this function.
             
             
                 
@@ -175,12 +184,7 @@ class Canvas(object):
                 
                 If the x coordinate is otherwise acceptable, but the text 
                 would extend outside the allowed area, then the text
-                will be trimmed from the right.
-                
-                It should be noted that, unless otherwise specified,
-                all methods of Canvas use this method to write text,
-                and if they have a refresh parameter, that value is
-                passed directly to Canvas.write().  
+                will be trimmed from the right. 
                 
             Canvas.writeRight(y, text, x=None, refresh=False)
             
@@ -212,7 +216,7 @@ class Canvas(object):
         
         if parent is None:
             
-            self.yOuter, self.xOuter = cursewin.getmaxxy()
+            self.yOuter, self.xOuter = cursewin.getmaxyx()
             self.ySize, self.xSize = self.yOuter, self.xOuter
             self.yHome, self.xHome = 0,0
             self.yOffset, self.xOffset = 0,0
@@ -221,7 +225,7 @@ class Canvas(object):
             
             if size[0] is None or size[1] is None:
         
-                yNow, xNow = cursewin.getmaxxy()
+                yNow, xNow = cursewin.getmaxyx()
                 
                 if size[0] is None:
                     size[0] = yNow 
@@ -273,9 +277,11 @@ class Canvas(object):
                 self.xOffset = self.margin[1] + border
                 self.xSize -= ( self.margin[1] + border ) * 2 
             
-    def drawBorder(self):        
+    def drawBorder(self):
         if self.border != False:
-            if self.parent == False:
+            
+            if self.parent is None:
+                
                 # this canvas is the entire window, so we can use
                 # the functionality of cursewin
                 
@@ -293,7 +299,7 @@ class Canvas(object):
                 # this is a secondary canvas
                 
                 if self.border == True:
-                    rectangle( self.cursewin, self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.yOuter - 1)
+                    rectangle( self.cursewin, self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 2)
                     
                 else:
                     if type( self.border ) == str and len( self.border ) == 1:
@@ -305,20 +311,33 @@ class Canvas(object):
                     if type( self.border ) in [list,str] and len( self.border ) == 8:
                         # do it the hard way
                         
-                        self.cursewin.addstr( self.yHome, self.xHome + 1, self.border[0] * [ self.xSize - 2 ] ) #top
-                        self.cursewin.addstr( self.yHome + self.Outer - 1, self.xHome + 1, self.border[1] * [ self.xSize - 2 ] ) # bottom
+                        top = self.border[0]
+                        bottom = self.border[1]
+                        left = self.border[2]
+                        right = self.border[3]
+                        topleft = self.border[4]
+                        topright = self.border[5]
+                        bottomleft= self.border[6]
+                        bottomright =self.border[7]                        
+                        
+                        self.cursewin.addstr( self.yHome, self.xHome + 1, top * ( self.xOuter - 2 ) ) #top
+                        self.cursewin.addstr( self.yHome + self.yOuter - 1, self.xHome + 1, bottom * ( self.xOuter - 2 ) ) # bottom
                         
                         for i in range( 1, self.ySize - 1 ):
-                            self.cursewin.addstr( self.yHome + i, self.xHome, self.border[2] ) #left
-                            self.cursewin.addstr( self.yHome + i, self.xHome + self.xSize - 1, self.border[3] ) #right
+                            self.cursewin.addstr( self.yHome + i, self.xHome, left ) #left
+                            self.cursewin.addstr( self.yHome + i, self.xHome + self.xOuter - 1, right ) #right
                     
-                        self.cursewin.addstr( self.yHome, self.xHome, self.border[4] ) #top left
-                        self.cursewin.addstr( self.yHome, self.xHome + self.xSize - 1, self.border[5] ) #top right
-                        self.cursewin.addstr( self.yHome + self.Outer - 1, self.xHome, self.border[6] ) #botom left
-                        self.cursewin.addstr( self.yHome + + self.Outer - 1, self.xHome + self.xSize - 1, self.border[7] ) # bottom right
+                        self.cursewin.addstr( self.yHome, self.xHome, topleft ) #top left
+                        self.cursewin.addstr( self.yHome, self.xHome + self.xOuter - 1, topright ) #top right
+                        self.cursewin.addstr( self.yHome + self.yOuter - 1, self.xHome, bottomleft ) #botom left
+                        self.cursewin.insch( self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, bottomright ) # bottom right
                         
                     # else: value for border is messed up, no border will be drawn
-                    
+            self.refresh()
+            
+    def refresh(self,flag=True):
+        if flag:
+            self.cursewin.refresh()
                     
     def offset(self,y,x):
         return self.yOffset + y, self.xOffset + x
@@ -343,23 +362,25 @@ class Canvas(object):
                 overshot = x + len(text) - self.xSize
                 text = text[0:-overshot]
             
-            self.cursewin.addstr( *self.curseCoordinates(y,x), text )
+            self.cursewin.addstr( *self.offset(y,x), text )
     
-            if refresh:
-                self.cursewin.refresh()
-                
+            self.refresh( refresh )
         
     def writeRight(self, y, text, x=None, refresh=False):
+        
+        text = str( text )
         
         if x is None:
             x = self.xSize - 1
         
-        start = x - ( len(text) - 1 )
+        start = x - len(text) - 1
 
         self.write( y,start,text,refresh )
         
                 
     def writeCenter(self, y, text, refresh=False, midpoint=None):
+        
+        text = str( text )
         
         if midpoint is None:
             x = int( ( self.xSize - len(text) ) / 2 )
