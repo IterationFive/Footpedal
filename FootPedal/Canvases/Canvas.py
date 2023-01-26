@@ -324,19 +324,20 @@ class Canvas(object):
                 self.xSize -= ( self.margin[1] + border ) * 2
                 
     def inBounds(self,y,x,endY,endX, offset = True ):
-            inBounds = True
+
+        inBounds = True
+        
+        if x < 0 or y < 0:
+            inBounds = False
             
-            if x < 0 or y < 0:
+        elif offset:
+            if endY >= self.ySize or endX >= self.xSize:
+                inBounds = False
+        else:
+            if endY >= self.yOffset + self.yOuter or endX >= self.xOffset + self.xOuter:
                 inBounds = False
                 
-            elif offset:
-                if endY >= self.ySize or endX >= self.xSize:
-                    inBounds = False
-            else:
-                if endY >= self.yOuter or endX >= self.xOuter:
-                    inBounds = False
-                    
-            return inBounds
+        return inBounds
                     
                     
     def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
@@ -353,7 +354,7 @@ class Canvas(object):
                 self.refresh(refresh)
                 
     def textrectangle(self, config, y, x, endY, endX, refresh=False, offset=True):
-        
+                
         if self.inBounds(y, x, endY, endX, offset):
             
             if offset:
@@ -387,11 +388,11 @@ class Canvas(object):
             
             
     def drawBorder(self):
+        
         if self.border != False:
             
             if self.border == True:
                 self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
-                
             else:
                 self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
 
@@ -465,9 +466,9 @@ class Canvas(object):
         
         self.write( y,x, text, refresh)
         
-    def setSlot(self, name, y, x, width, alignment=cv.LEFT,refresh):
+    def setSlot(self, name, y, x, width, alignment=cv.LEFT,refresh=False):
         self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment }
-        self.slotBlank(name)
+        self.slotBlank(name, refresh )
         
     def slotGet(self, slot):
         if slot not in self.slot:
