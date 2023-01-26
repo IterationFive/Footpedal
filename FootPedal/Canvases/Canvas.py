@@ -202,6 +202,57 @@ class Canvas(object):
                 
             Canvas.writeHere(text, refresh=False)
                 Writes the text at the current cursor position.
+                
+        Slot Methods:
+        
+            The slot functionality allows you to designate a
+            part of a given line as a place where text will be 
+            written/updated, and stores the contents of the slot.
+        
+            Canvas.setSlot(self, name, y, x, width, alignment=cv.LEFT, refresh=False):
+                creates the slot.  erases the area it occupies.
+                
+                alignment determines how the text is aligned within 
+                the slot, and can be cv.LEFT, cv.RIGHT, cv.CENTER, or cv.CENTRE.
+                this is a default; a different alignment can be 
+                specified when the slot is written to.                
+                
+            Canvas.slotBlank(slot,refresh=False)
+                Erases the area occupied by the slot and sets the
+                contents to None.
+                
+            Canvas.slotWrite(slot, data, refresh=False, forceAlign=False):
+                
+                If forceAlign is provided, it will overwrite the 
+                default alignment for the slot.
+                
+                This method stores the data in the slot, and 
+                then writes it to the screen.  
+                
+                If the string is larger than the width of the 
+                slot, it will be trimmed from the right.  
+                
+                It should be noted that the data provided is stored
+                *as provided*.  If it is a string that exceeds the 
+                bounds of the slot, the full string will be stored.
+                If the data is not a string-- for example, an integer
+                or float-- it will be stored as provided, and then
+                converted to a string for writing.
+
+            Canvas.slotGet(slot)            
+                Retrieves the data stored in a slot as it was 
+                originally provided before converstion to 
+                string and/or truncation.
+                
+            Canvas.slotMove(self, slot, y, x, refresh=False):
+                Relocates the slot to the given coordinates.  
+                Both the original slot area and the new slot 
+                area will be blanked, then the new slot area
+                will be filled with contents of the slot.
+                
+                Note that if alignment was overriden when 
+                the data was written, that override will
+                not be applied when the slot is moved.
         
     '''
 
@@ -240,7 +291,7 @@ class Canvas(object):
     def getAvailableSize(self):
         return self.ySize, self.xSize    
     
-    def determineAvailableArea(self):
+    def setMargins(self):
         
         self.yOffset=self.yHome
         self.xOffset=self.xHome
@@ -414,8 +465,9 @@ class Canvas(object):
         
         self.write( y,x, text, refresh)
         
-    def setSlot(self, name, y, x, width, alignment=cv.LEFT):
-        self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment,'contents': None }
+    def setSlot(self, name, y, x, width, alignment=cv.LEFT,refresh):
+        self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment }
+        self.slotBlank(name)
         
     def slotGet(self, slot):
         if slot not in self.slot:
@@ -425,15 +477,24 @@ class Canvas(object):
         
     def slotBlank(self, slot, refresh=False):
         self.window.addstr( self.slot[slot]['y'], self.slot[slot]['x'], ' ' * self.slot[slot]['width'] )
-        self.slot[slot]['content']  = None
+        self.slot[slot]['contents']  = None
         self.window.refresh(refresh)
+
+    def slotMove(self, slot, y, x, refresh=False):
         
-    def slotWrite(self, slot, text, refresh=False, forceAlign=False):
+        contents = self.slot[slot]['contents']
+        self.slotBlank(slot, False )
+        self.setSlot(slot, self.slot[slot]['y'],self.slot[slot]['x'],self.slot[slot]['width'],self.slot[slot]['alignment'])
+        self.slotWrite( slot, contents, refresh )
+        
+    def slotWrite(self, slot, data, refresh=False, forceAlign=False):
         
         if slot in self.slot:
             self.slotBlank(slot)
             slot = self.slot[slot]
-            slot['contents'] = text
+            slot['contents'] = data
+            
+            text = str( data )
             
             if len(text) > slot['width']:
                 text = text[:slot['width']]                
@@ -450,12 +511,6 @@ class Canvas(object):
             if a == cv.RIGHT:
                 x += blanks
             if a == cv.CENTER and blanks > 0:
-                x += int( blanks / 2 ) blanks / 2 )
+                x += int( blanks / 2 ) 
                 
             self.write( slot['y'], x, text, refresh )
-
-    def slotMove(self, slot, y, x, refresh):
-        contents = self.slot[slot]['contents']
-        self.slotBlank(slot, False )
-        self.setSlot(slot, self.slot[slot]['y'],self.slot[slot]['x'],self.slot[slot]['width'],self.slot[slot]['alignment'])
-        self.write( self.slot[slot]['y'],self.slot[slot]['x'], contents, refresh )
