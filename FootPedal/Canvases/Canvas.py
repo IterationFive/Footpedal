@@ -11,7 +11,12 @@ import Canvases as cv
 class Canvas(object):
     '''
     
-    A Canvas object provides tools for working with a section or the entirity of a curses window.
+    A Canvas object provides tools for working with a section or the entirity of a 
+    curses window.  It allows you to create a border and margins.
+    
+    A canvas object works with a set of coordinates that correspond to the 
+    available area, after border and margins, that are automatically translated
+    by its tools into coordinates on the main screen.
     
     The contructor takes the following parameters.  all but the first are optional.  
     
@@ -114,9 +119,10 @@ class Canvas(object):
             Canvas.getAvailableSize()
                 returns a tuple of (ySize, xSize)
                 
-            Canvas.determineAvailableArea()
+            Canvas.frame()
             
-                uses yHome, xHome, yOuter, xOuter, margin, and border properties
+                draws the border, if configured, and then uses 
+                yHome, xHome, yOuter, xOuter, margin, and border properties
                 to calculate ySize, xSize, yOffset, and xOffset
                 
             Canvas.drawBorder()
@@ -268,9 +274,7 @@ class Canvas(object):
         
         size = list( size )
         
-        if size[0] is None or size[1] is None:
-    
-            yNow, xNow = cursewin.getmaxyx()
+        yNow, xNow = cursewin.getmaxyx()
             
         if size[0] is None:
             size[0] = yNow 
@@ -291,15 +295,22 @@ class Canvas(object):
     def getAvailableSize(self):
         return self.ySize, self.xSize    
     
-    def setMargins(self):
-        
-        self.yOffset=self.yHome
-        self.xOffset=self.xHome
+    def frame(self):
         
         if self.border != False:
+            
+            if self.border == True:
+                self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
+            else:
+                self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
+
+            self.refresh()
             border = 1
         else:
             border = 0
+        
+        self.yOffset=self.yHome
+        self.xOffset=self.xHome
         
         if type( self.margin ) == int:
             self.yOffset += self.margin + border
@@ -382,21 +393,7 @@ class Canvas(object):
                     self.cursewin.insch( i, 0, config[2] )
                     self.cursewin.insch( i, endX, config[3])
 
-                self.refresh( refresh )   
-                
-                
-            
-            
-    def drawBorder(self):
-        
-        if self.border != False:
-            
-            if self.border == True:
-                self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
-            else:
-                self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
-
-            self.refresh()
+                self.refresh( refresh )  
             
     def refresh(self,flag=True):
         if flag:
