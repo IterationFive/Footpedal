@@ -305,6 +305,9 @@ class Canvas(object):
         
     def getActualSize(self):
         return self.yOuter, self.xOuter
+        
+    def getMinimumSize(self):
+        return self.yOuter, self.xOuter
     
     def getAvailableSize(self):
         return self.ySize, self.xSize    
