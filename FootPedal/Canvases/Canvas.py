@@ -4,8 +4,8 @@ Created on Jan 24, 2023
 @author: Cather Steincamp
                 
 '''
-from curses.textpad import rectangle, Textbox
-import Canvases as cv
+import curses
+# import Canvases as cv
 
 class Canvas(object):
     '''
@@ -66,16 +66,6 @@ class Canvas(object):
                 
                 Using a border will increase the margin on all sides by one.
                 
-                
-            parent
-                if this canvas is contained within another canvas,
-                that canvas object should be provided here.
-                
-                if a parent is not supplied, the canvas will assume
-                that it is in control of the entire cursewin
-                window, and the remaining parameters will be ignored. 
-                
-                
             size
                 tuple (height, width)
                 
@@ -92,20 +82,21 @@ class Canvas(object):
                 the cursewin coordinates of the upper left hand corner
                 of the area handled by this object
                 
+                defaults to 0,0
+                
         
         Properties:
         
-            cursewin, margin, border, parent
-                the objects and values provided to the constructor
-            
+            cursewin, margin, border
+                the objects and values provided to the constructor            
             yOuter, xOuter 
-                The actual dimensions of the area of the canvas
-                for windows, this will be equal to the size of the window
+                The outer dimensions of the canvas
             yHome, xHome
                 The curses window coordinate of the upper left hand corner
                 of the canvas
             ySize, xSize
-                The available area after accounting for windows and padding
+                The dimension of the usable area of the canvas 
+                after accounting for border and margins
             yOffset, xOffset
                 The curses coordinates of the upper left hand corner
                 of the available area
@@ -154,8 +145,26 @@ class Canvas(object):
                 calls cursewin.refresh() so long as flag is true.
                 
                 It should be noted that any methods that have a "refresh"
-                parameter pass that parameter to this function.
+                parameter pass that parameter to this function. 
+                
+            Canvas.rectangle( y, x, endY, endX, refresh = False, offset = True )
             
+                Draws a rectangle at the the given start and end coordinates.
+                
+                This is just basically a slight modification of curses.textpad.rectangle,
+                which has an annoying bug where it will not allow you to draw a box that
+                shares a lower-right-hand-corner with the screen.  
+                
+                By default, will pass the coordinates through Canvas.offset().
+                You can use cursewin coordinates if offset is False.  Mainly
+                this was to let me use this function to draw the border.
+                
+            Cancas.textRectangle(config, y, x, endY, endX, refresh=False, offset=True)
+            
+                Draws a rectangle at the the given start and end coordinates using 
+                the string or list provided as config, using the same configuration as
+                the border parameter of the constructor (which, in fact, ends up getting
+                passed to this method.).
             
                 
         Write Methods:
@@ -169,22 +178,14 @@ class Canvas(object):
                 written outside the available area, either by truncating the text
                 or not writing it at all.
                 
-                If: 
-                    the y coordinate is less than zero
-                    the y coordinate is equal to or greater than self.ySize
-                    the x coordinate is equal to or greater than self.xSize
-                    the x coordinate is less than zero by an amount
-                        more than the length of the text 
-                    
+                If the text falls completely beyond the available area,                    
                 then no attempt will be made to write the text.
                 
-                If the x coordinate is less than zero by an amount less than
-                the length of the text, the text will be trimmed from the left
-                and x will be adusted to zero.
+                If the text extends to the left of the available area,
+                it will be truncated from the left to fit.
                 
-                If the x coordinate is otherwise acceptable, but the text 
-                would extend outside the allowed area, then the text
-                will be trimmed from the right. 
+                If the text extends to the right of the available area,
+                it will be truncated from the right to fit.
                 
             Canvas.writeRight(y, text, x=None, refresh=False)
             
@@ -204,7 +205,7 @@ class Canvas(object):
     '''
 
 
-    def __init__(self, cursewin, margin=0, border=False, parent=None, size=(None,None), home=(None,None)):
+    def __init__(self, cursewin, margin=0, border=False, size=(None,None), home=(0,0)):
         '''
         Constructor
         '''
@@ -212,31 +213,27 @@ class Canvas(object):
         self.cursewin=cursewin 
         self.margin=margin 
         self.border=border
-        self.parent=parent
         
-        if parent is None:
-            
-            self.yOuter, self.xOuter = cursewin.getmaxyx()
-            self.ySize, self.xSize = self.yOuter, self.xOuter
-            self.yHome, self.xHome = 0,0
-            self.yOffset, self.xOffset = 0,0
-            
-        else:
-            
-            if size[0] is None or size[1] is None:
+        size = list( size )
         
-                yNow, xNow = cursewin.getmaxyx()
-                
-                if size[0] is None:
-                    size[0] = yNow 
-                if size[1] is None:
-                    size[1] = xNow 
-            
-            self.yOuter, self.xOuter = size
-            self.ySize, self.xSize = size
-            self.yOffset, self.xOffset = home
-            self.yHome, self.xHome = home
+        if size[0] is None or size[1] is None:
     
+            yNow, xNow = cursewin.getmaxyx()
+            
+        if size[0] is None:
+            size[0] = yNow 
+        else:
+            size[0] -= 1
+        if size[1] is None:
+            size[1] = xNow
+        else:
+            size[1] -= 1
+        
+        self.yOuter, self.xOuter = size
+        self.ySize, self.xSize = size
+        self.yOffset, self.xOffset = home
+        self.yHome, self.xHome = home
+
         
         
     def getActualSize(self):
@@ -275,64 +272,80 @@ class Canvas(object):
                 self.xSize -= self.margin[1][0] + self.margin[1][1] + ( border * 2 )
             elif type( self.margin[1] ) == int:
                 self.xOffset = self.margin[1] + border
-                self.xSize -= ( self.margin[1] + border ) * 2 
+                self.xSize -= ( self.margin[1] + border ) * 2
+                
+    def inBounds(self,y,x,endY,endX, offset = True ):
+            inBounds = True
+            
+            if x < 0 or y < 0:
+                inBounds = False
+                
+            elif offset:
+                if endY >= self.ySize or endX >= self.xSize:
+                    inBounds = False
+            else:
+                if endY >= self.yOuter or endX >= self.xOuter:
+                    inBounds = False
+                    
+            return inBounds
+                    
+                    
+    def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
+            
+            if self.inBounds(y, x, endY, endX, offset):
+                self.cursewin.vline(y+1, x, curses.ACS_VLINE, endY - y - 1)                      
+                self.cursewin.hline(y, x+1, curses.ACS_HLINE, endX - x - 1)                      
+                self.cursewin.hline(endY, x+1, curses.ACS_HLINE, endX - x - 1)                      
+                self.cursewin.vline(y+1, endX, curses.ACS_VLINE, endY - y - 1)                      
+                self.cursewin.addch(y, x, curses.ACS_ULCORNER)                                    
+                self.cursewin.addch(y, endX, curses.ACS_URCORNER)                                         
+                self.cursewin.addch(endY, x, curses.ACS_LLCORNER)                              
+                self.cursewin.insch(endY, endX, curses.ACS_LRCORNER) 
+                self.refresh(refresh)
+                
+    def textrectangle(self, config, y, x, endY, endX, refresh=False, offset=True):
+        
+        if self.inBounds(y, x, endY, endX, offset):
+            
+            if offset:
+                y += self.yOffset
+                x += self.xOffset
+            
+            if type( config ) == str and len( config ) == 1:
+                config = config*8
+                    
+            if type( config ) in [list,str] and len( config ) == 3:
+                config = config[0] * 2 + config[1] * 2 + config[2] * 4
+                    
+            if type( config ) in [list,str] and len( config ) == 8:
+                # we have a valid list or string and can proceed
+                
+                self.cursewin.insch( y, x, config[4] )
+                self.cursewin.insch( y, endX, config[5] )
+                self.cursewin.insch( endY, x, config[6] )
+                self.cursewin.insch( endY, endX, config[7] )
+                                
+                self.cursewin.addstr( y, x+1, config[0]*( ( endX - x ) - 1 ) )
+                self.cursewin.addstr( endY, x+1, config[1]*( ( endX - x ) -1 ) )
+                
+                for i in range( y+1, endY ):
+                    self.cursewin.insch( i, 0, config[2] )
+                    self.cursewin.insch( i, endX, config[3])
+
+                self.refresh( refresh )   
+                
+                
+            
             
     def drawBorder(self):
         if self.border != False:
             
-            if self.parent is None:
-                
-                # this canvas is the entire window, so we can use
-                # the functionality of cursewin
-                
-                if self.border == True:
-                    self.cursewin.box()
-                elif type( self.border ) == str and len( self.border ) == 1:
-                    self.cursewin.border( *self.border*8 )
-                elif type( self.border ) in [list,str] and len( self.border ) == 3:
-                    self.cursewin.border( [*self.border[0] * 2 + self.border[1] * 2 + self.border[2] * 4] )
-                elif type( self.border ) in [list,str] and len( self.border ) == 8:
-                    self.cursewin.border( *self.border )
-                # else: value for border is messed up, no border will be drawn
+            if self.border == True:
+                self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
                 
             else:
-                # this is a secondary canvas
-                
-                if self.border == True:
-                    rectangle( self.cursewin, self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 2)
-                    
-                else:
-                    if type( self.border ) == str and len( self.border ) == 1:
-                        self.border = self.border*8
-                    
-                    if type( self.border ) == str and len( self.border ) == 3:
-                        self.border = self.border[0] * 2 + self.border[1] * 2 + self.border[2] * 4
-                        
-                    if type( self.border ) in [list,str] and len( self.border ) == 8:
-                        # do it the hard way
-                        
-                        top = self.border[0]
-                        bottom = self.border[1]
-                        left = self.border[2]
-                        right = self.border[3]
-                        topleft = self.border[4]
-                        topright = self.border[5]
-                        bottomleft= self.border[6]
-                        bottomright =self.border[7]                        
-                        
-                        self.cursewin.addstr( self.yHome, self.xHome + 1, top * ( self.xOuter - 2 ) ) #top
-                        self.cursewin.addstr( self.yHome + self.yOuter - 1, self.xHome + 1, bottom * ( self.xOuter - 2 ) ) # bottom
-                        
-                        for i in range( 1, self.ySize - 1 ):
-                            self.cursewin.addstr( self.yHome + i, self.xHome, left ) #left
-                            self.cursewin.addstr( self.yHome + i, self.xHome + self.xOuter - 1, right ) #right
-                    
-                        self.cursewin.addstr( self.yHome, self.xHome, topleft ) #top left
-                        self.cursewin.addstr( self.yHome, self.xHome + self.xOuter - 1, topright ) #top right
-                        self.cursewin.addstr( self.yHome + self.yOuter - 1, self.xHome, bottomleft ) #botom left
-                        self.cursewin.insch( self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, bottomright ) # bottom right
-                        
-                    # else: value for border is messed up, no border will be drawn
+                self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
+
             self.refresh()
             
     def refresh(self,flag=True):
@@ -359,7 +372,7 @@ class Canvas(object):
         
             if x + len( text ) >= self.xSize:
                 # truncate from the right
-                overshot = x + len(text) - self.xSize
+                overshot = x + len(text) - self.xSize  
                 text = text[0:-overshot]
             
             self.cursewin.addstr( *self.offset(y,x), text )
