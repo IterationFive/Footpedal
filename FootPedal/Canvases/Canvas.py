@@ -18,6 +18,13 @@ class Canvas(object):
     available area, after border and margins, that are automatically translated
     by its tools into coordinates on the main screen.
     
+    It is possible to have more than one Canvas on a window, but they have 
+    no awareness of each other and any overlap will slap back and forth between
+    updates.  Also, when a canvas refreshes, it does so by refreshing the screen.
+    
+    Attempts to define a canvas that exceeds the bounds of the window will throw
+    a ValueError exception.
+    
     The contructor takes the following parameters.  all but the first are optional.  
     
             cursewin
@@ -280,6 +287,13 @@ class Canvas(object):
             size[0] = yNow 
         if size[1] is None:
             size[1] = xNow
+            
+        if home[0] < 0 or home[0] >= yNow or home[1] < 0 or home[1] >= xNow:
+            raise ValueError('Specified coordinates for home are outside window bounds.' )
+        
+        if home[0] + size[0] >= yNow or home[1] +size[1] >= xNow:
+            raise ValueError('Section defined is outside window bounds.' )
+            
         
         self.yOuter, self.xOuter = size
         self.ySize, self.xSize = size
