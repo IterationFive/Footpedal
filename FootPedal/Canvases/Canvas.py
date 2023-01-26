@@ -5,7 +5,8 @@ Created on Jan 24, 2023
                 
 '''
 import curses
-# import Canvases as cv
+
+import Canvases as cv
 
 class Canvas(object):
     '''
@@ -222,18 +223,15 @@ class Canvas(object):
             
         if size[0] is None:
             size[0] = yNow 
-        else:
-            size[0] -= 1
         if size[1] is None:
             size[1] = xNow
-        else:
-            size[1] -= 1
         
         self.yOuter, self.xOuter = size
         self.ySize, self.xSize = size
         self.yOffset, self.xOffset = home
         self.yHome, self.xHome = home
 
+        self.slot = {}
         
         
     def getActualSize(self):
@@ -415,4 +413,49 @@ class Canvas(object):
         x -= self.xOffset
         
         self.write( y,x, text, refresh)
-    
+        
+    def setSlot(self, name, y, x, width, alignment=cv.LEFT):
+        self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment,'contents': None }
+        
+    def slotGet(self, slot):
+        if slot not in self.slot:
+            return False
+        else:
+            return self.slot[slot]['contents'] 
+        
+    def slotBlank(self, slot, refresh=False):
+        self.window.addstr( self.slot[slot]['y'], self.slot[slot]['x'], ' ' * self.slot[slot]['width'] )
+        self.slot[slot]['content']  = None
+        self.window.refresh(refresh)
+        
+    def slotWrite(self, slot, text, refresh=False, forceAlign=False):
+        
+        if slot in self.slot:
+            self.slotBlank(slot)
+            slot = self.slot[slot]
+            slot['contents'] = text
+            
+            if len(text) > slot['width']:
+                text = text[:slot['width']]                
+            
+            x = slot['x']
+            
+            if forceAlign != False:
+                a = forceAlign
+            else:
+                a = slot['alignment']
+            
+            blanks = slot['width'] - len( text )
+            
+            if a == cv.RIGHT:
+                x += blanks
+            if a == cv.CENTER and blanks > 0:
+                x += int( blanks / 2 ) blanks / 2 )
+                
+            self.write( slot['y'], x, text, refresh )
+
+    def slotMove(self, slot, y, x, refresh):
+        contents = self.slot[slot]['contents']
+        self.slotBlank(slot, False )
+        self.setSlot(slot, self.slot[slot]['y'],self.slot[slot]['x'],self.slot[slot]['width'],self.slot[slot]['alignment'])
+        self.write( self.slot[slot]['y'],self.slot[slot]['x'], contents, refresh )
