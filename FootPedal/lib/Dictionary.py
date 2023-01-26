@@ -21,67 +21,50 @@ class Dictionary(dict):
     
     def __init__(self, file=None, autoSave=False ):
         dict.__init__(self)
+        
         self.__file = file
         self.__auto = autoSave
         self.Lock = Lock()
         
+        if file is not None and isfile( file ):
+            self.load()
+        
     def clear(self):
-        with self.Lock:
-            dict.clear(self)
-            self.__autosave()
-            
-    def copy(self):
-        with self.Lock():
-            return dict.copy(self )
-
-    def get(self, __key, __default):
-        with self.Lock:
-            return dict.get(self, __key, __default)
+        dict.clear(self)
+        self.__autosave()
         
-    def items(self):
-        with self.Lock:
-            return dict.items(self)
-        
-    def keys(self):
-        with self.Lock:
-            return dict.keys(self)
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, value)
+        self.__autosave()
     
     def pop(self, *args):
-        with self.Lock:
-            r = dict.pop(self,*args)
-            self.__autosave()
-            return r
+        r = dict.pop(self,*args)
+        self.__autosave()
+        return r
         
     def popitem(self):
-        with self.Lock:
-            r = dict.popitem(self)
+        r = dict.popitem(self)
+        self.__autosave()
+        return r
+    
+    def setdefault(self, key,default):        
+        r = dict.setdefault(self, key, default)
+        if r == default:
             self.__autosave()
-            return r
-        
-    def setdefault(self, key,default):
-        with self.Lock:
-            r = dict.setdefault(self, key, default)
-            if r == default:
-                self.__autosave()
-             
+        return r
+    
     def update(self, **kwargs):
-        with self.Lock:
-            dict.update(self, **kwargs)
-            self.__autosave
+        dict.update(self, **kwargs)
+        self.__autosave
             
     def values(self):
-        with self.Lock:
-            return dict.values(self)
+        return dict.values(self)
         
     def __autosave(self):
         if self.__auto:
-            self.__save()
-            
-    def save(self):
-        with self.Lock:
             self.save()
             
-    def __save(self, filename=None):
+    def save(self, filename=None):
         if filename is None:
             filename = self.__file
         
@@ -96,13 +79,18 @@ class Dictionary(dict):
                     
     def load(self, filename=None, keepName = True ):
         with self.Lock:
+        
             if filename is None:
                 filename = self.__file
                 
             if isfile( filename ):
                 
                 f = open( filename, 'r' )
-                j = json.load(f)
+                try:
+                    j = json.load(f)
+                except:
+                    j = {}
+                    
                 f.close()
                 
                 if type( j ) == dict:
@@ -114,8 +102,7 @@ class Dictionary(dict):
                 else:
                     raise ValueError( 'File ' + filename + ' does not contain a json dictionary' )
                 
-            else:
-                raise ValueError( 'Invalid filename ' + filename + ' supplied to Dictionary' )
+            
             
             
     
