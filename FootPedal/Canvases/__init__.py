@@ -11,3 +11,5 @@ DOWN = 1
 
 AUTO = -2
 MAX = -3
+
+from Canvases.Canvas import Canvas
