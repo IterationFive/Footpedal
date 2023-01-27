@@ -400,51 +400,70 @@ class Canvas(object):
                 
         return inBounds
     
+    def hlineCheck(self,y,x,length):
+        
+        if y >= 0 and y < self.ySize and x < self.xSize:
+            # we at least have the possibility of
+            # being within bounds
+            
+            if x < 0 and length > 0 - x:
+                #we are too far to the left, but 
+                #we can fix it
+                length = ( length - x ) -1
+                x = 0
+                
+            if x >= 0:
+                #we at least start within bounds
+                  
+                if x + length > self.xSize:
+                    #too far right; shorten
+                    
+                    length -= length - ( self.xSize + x )
+                
+                y,x = self.offset( y,x )
+            else:
+                return False, False, False
+        else:
+            return False, False, False
+
     def hline(self,y,x,length, refresh=False):
 
-            if y >= 0 and y < self.ySize and x < self.xSize:
-                # we at least have the possibility of
-                # being within bounds
+        y, x, length = self.hlineCheck(y, x, length)                    
+        
+        if y != False:            
+            self.cursewin.hline( y,x, curses.ACS_HLINE, length )
+            
+    def vlineCheck(self, y, x, length ):
+
+        if x >= 0 and x < self.xSize and y < self.ySize:
+            # we at least have the possibilitx of
+            # being within bounds
+            
+            if y < 0 and length > 0 - y:
+                #we are too high, but 
+                #we can fiy it
+                length = ( length - y ) 
+                y = 0
                 
-                if x < 0 and length > 0 - x:
-                    #we are too far to the left, but 
-                    #we can fix it
-                    length = ( length - x ) -1
-                    x = 0
-                    
-                if x >= 0:
-                    #we at least start within bounds
-                      
-                    if x + length > self.xSize:
-                        #too far right; shorten
-                        
-                        length -= length - ( self.xSize + x )
-                    
-                    y,x = self.offset( y,x )                    
-                    
-                    self.cursewin.hline( y,x, curses.ACS_HLINE, length )
+            if y >= 0:
+                #we at least start within bounds
+                  
+                if y + length >= self.ySize:
+                    #too far right; shorten
+                    length -= length - ( self.ySize + y ) 
+                
+                y,x = self.offset( y,x )
+            else:
+                return False, False, False
+        else:
+            return False, False, False
                     
     def vline(self,y,x,length, refresh=False):
 
-            if x >= 0 and x < self.xSize and y < self.ySize:
-                # we at least have the possibilitx of
-                # being within bounds
-                
-                if y < 0 and length > 0 - y:
-                    #we are too high, but 
-                    #we can fiy it
-                    length = ( length - y ) 
-                    y = 0
-                    
-                if y >= 0:
-                    #we at least start within bounds
-                      
-                    if y + length >= self.ySize:
-                        #too far right; shorten
-                        length -= length - ( self.ySize + y ) 
-                    
-                    self.cursewin.vline( *self.offset(y,x), curses.ACS_VLINE, length )
-            
+        y, x, length = self.hlineCheck(y, x, length)                    
+        
+        if y != False:            
+            self.cursewin.vline( *self.offset(y,x), curses.ACS_VLINE, length )         
                     
                     
     def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
