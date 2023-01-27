@@ -399,6 +399,11 @@ class Canvas(object):
     def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
             
         if self.inBounds(y, x, endY, endX, offset):
+            
+            if offset:
+                y,x = self.offset(y,x)
+                endY,endX = self.offset(endX,endY)
+            
             self.cursewin.vline(y+1, x, curses.ACS_VLINE, endY - y - 1)                      
             self.cursewin.hline(y, x+1, curses.ACS_HLINE, endX - x - 1)                      
             self.cursewin.hline(endY, x+1, curses.ACS_HLINE, endX - x - 1)                      
@@ -414,8 +419,7 @@ class Canvas(object):
         if self.inBounds(y, x, endY, endX, offset):
             
             if offset:
-                y += self.yOffset
-                x += self.xOffset
+                y,x = self.offset(y,x)
             
             if type( config ) == str and len( config ) == 1:
                 config = config*8
@@ -426,18 +430,14 @@ class Canvas(object):
             if type( config ) in [list,str] and len( config ) == 8:
                 # we have a valid list or string and can proceed
                 
-                self.cursewin.insch( y, x, config[4] )
-                self.cursewin.insch( y, endX, config[5] )
-                self.cursewin.insch( endY, x, config[6] )
-                self.cursewin.insch( endY, endX, config[7] )
-                                
-                self.cursewin.addstr( y, x+1, config[0]*( ( endX - x ) - 1 ) )
-                self.cursewin.addstr( endY, x+1, config[1]*( ( endX - x ) -1 ) )
-                
-                for i in range( y+1, endY ):
-                    self.cursewin.insch( i, 0, config[2] )
-                    self.cursewin.insch( i, endX, config[3])
-
+                self.cursewin.vline(y+1, x, config[0], endY - y - 1)                        
+                self.cursewin.vline(y+1, endX, config[1], endY - y - 1)                           
+                self.cursewin.hline(y, x+1, config[2], endX - x - 1)                      
+                self.cursewin.hline(endY, x+1, config[3], endX - x - 1)               
+                self.cursewin.addch(y, x, config[4])                                    
+                self.cursewin.addch(y, endX, config[5])                                         
+                self.cursewin.addch(endY, x, config[6])                              
+                self.cursewin.insch(endY, endX, config[7]) 
                 self.refresh( refresh )  
             
     def refresh(self,flag=True):
