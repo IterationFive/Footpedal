@@ -12,4 +12,7 @@ DOWN = 1
 AUTO = -2
 MAX = -3
 
+HORIZONTAL = 1
+VERITCAL = 2
+
 from Canvases.Canvas import Canvas
