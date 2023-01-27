@@ -6,7 +6,6 @@ Created on Jan 26, 2023
 
 import Canvases as cv
 import curses
-from lib.Dictionary import Dictionary
 
 class DynamicCanvas(cv.Canvas):
     '''
@@ -54,23 +53,21 @@ class DynamicCanvas(cv.Canvas):
             
     DynamicCanvas overrides the following methods:
         
+        DynamicCanvas.write()
+        DynamicCanvas.rectangle()
+        DynamicCanvas.textrectangle()
+        DynamicCanvas.hline()
+        DynamicCanvas.vline()
+            if this object is the mainCanvas, calls the parent method.
+            if not, runs the input through the parent method's input checker
+            ( ex. writeCheck or inBounds ), then passes the input on
+            to the parent.  This allows for all offsets to be applied,
+            and prevents a misconfigured canvas from exceeding the 
+            bounds of its container. 
         DynamicCanvas.getMinimumSize()   
             if size is hardcoded, returns that size if not, polls the canvases within 
             it and determines the minimum height and width.
-        DynamicCanvas.write()
-            if mainCanvas, calls Canvas.write()
-            if not, runs text through Canvas.writeCheck(), then passes the results to 
-            the self.parent.write().  This ensures all offset are provided and 
-            prevents a misconfigured Canvas from reaching outside the area
-            of the canvas that contain it.
-
-        DynamicCanvas.rectangle(), DynamicCanvas.textrectangle()
-            if mainCanvas, calls Canvas.rectangle or Canvas.textrectangle.
-            if not, verifies that the rectangle is within its boundaries,
-            offsets the coordinates, and passes the command to the
-            parent.
             
-    
             
     DynamicCanvas adds the following methods:
     
@@ -80,16 +77,6 @@ class DynamicCanvas(cv.Canvas):
             
         DynamicCanvas.canUpdate()
             returns _allowUpdates
-            
-        DynamicCanvas.layout()
-            while empty in this class, it allows child classes to automate the
-            addition of subcanvases.  
-            
-            Use of this class is not required; Canvases can be added through
-            external command; in fact, this command can be used to exactly that
-            to its subcanvases.
-            
-            Additionally, this 
             
     
     
@@ -194,7 +181,6 @@ class DynamicCanvas(cv.Canvas):
         else:
             if self.inBounds(y, x, endY, endX, offset):
                 self.parent.textrectangle( config, y, x, endY, endX, refresh=refresh, offset=offset)
-    
                 
     def hline(self, y, x, length, refresh=False):
         if self.parent is None:
