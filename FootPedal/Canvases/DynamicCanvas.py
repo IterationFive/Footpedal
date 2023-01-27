@@ -196,7 +196,21 @@ class DynamicCanvas(cv.Canvas):
                 self.parent.textrectangle( config, y, x, endY, endX, refresh=refresh, offset=offset)
     
                 
-        
+    def hline(self, y, x, length, refresh=False):
+        if self.parent is None:
+            cv.Canvas.hline(self, y, x, length, refresh=refresh)
+        else:
+            y,x,length = self.hlineCheck(y, x, length)
+            if y!= False:
+                self.parent.hline( y, x, length, refresh )
+                
+    def vline(self, y, x, length, refresh=False):
+        if self.parent is None:
+            cv.Canvas.vline(self, y, x, length, refresh=refresh)
+        else:
+            y,x,length = self.vlineCheck(y, x, length)
+            if y!= False:
+                self.parent.vline( y, x, length, refresh )
         
     
     
