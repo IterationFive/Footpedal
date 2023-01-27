@@ -13,6 +13,6 @@ AUTO = -2
 MAX = -3
 
 HORIZONTAL = 1
-VERITCAL = 2
+VERTICAL = 2
 
 from Canvases.Canvas import Canvas
