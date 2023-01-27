@@ -223,6 +223,13 @@ class Canvas(object):
             Canvas.writeHere(text, refresh=False)
                 Writes the text at the current cursor position.
                 
+            Canvas.writeCheck(x,y,text)
+                verifies text is within writeable bounds
+                truncates it if necessary
+                returns offset values for y,x and truncated (if so) text
+                returns False, False, False if text can't be written at all
+                This exists mostly for downward compatibility
+                
         Slot Methods:
         
             The slot functionality allows you to designate a
@@ -402,7 +409,7 @@ class Canvas(object):
                 if x < 0 and length > 0 - x:
                     #we are too far to the left, but 
                     #we can fix it
-                    length = length - x
+                    length = ( length - x ) -1
                     x = 0
                     
                 if x >= 0:
@@ -411,7 +418,7 @@ class Canvas(object):
                     if x + length > self.xSize:
                         #too far right; shorten
                         
-                        length -= self.xSize - ( length + x )
+                        length -= length - ( self.xSize + x )
                     
                     y,x = self.offset( y,x )                    
                     
@@ -426,7 +433,7 @@ class Canvas(object):
                 if y < 0 and length > 0 - y:
                     #we are too high, but 
                     #we can fiy it
-                    length = length - y
+                    length = ( length - y ) 
                     y = 0
                     
                 if y >= 0:
@@ -434,7 +441,7 @@ class Canvas(object):
                       
                     if y + length >= self.ySize:
                         #too far right; shorten
-                        length = y - self.ySize
+                        length -= length - ( self.ySize + y ) 
                     
                     self.cursewin.vline( *self.offset(y,x), curses.ACS_VLINE, length )
             
@@ -493,18 +500,24 @@ class Canvas(object):
     
     def moveCursor(self,y,x):
         self.cursewin.move( *self.offset(y, x) )
-            
-    def write(self, y, x, text, refresh=False ):
+    
+    
+    def writeCheck(self, y, x, text ):
+        
+        if y < 0 :
+            y = self.ySize + y
+        if x < 0:
+            x = self.xSize + x
         
         text = str( text )
-            
-        if x < 0 and len( text ) > 0 - x:
-            # truncate from the left
-            text = text[0-x:]
-            x = 0
         
-        if y < self.ySize and y >= 0 and x < self.xSize and x >= 0:
-        # we are at least starting within the border of the screen
+        if y < self.ySize and y >= 0 and x < self.xSize and ( x >= 0 or len( text ) <= 0 - x ):
+            # we are at least starting within the border of the screen
+                
+            if x < 0:
+                # truncate from the left
+                text = text[0-x:]
+                x = 0
         
             if x + len( text ) > self.xSize:
                 # truncate from the right
@@ -514,11 +527,23 @@ class Canvas(object):
                 
             y,x = self.offset(y, x)
             
-            if y == self.yOuter - 1 and x + len( text ) == self.xOuter:
-                self.cursewin.addstr( y,x, text[0:-1] )
-                self.cursewin.insch( y, self.xOuter-1, text[-1] )
-            else:
-                self.cursewin.addstr( y,x, text )
+            return y, x, text
+        
+        else:
+            return False, False, False
+    
+    def write(self, y, x, text, refresh=False ):
+        
+            y,x,text = self.writeCheck(y, x, text)
+            
+            self.cursewin.addstr( 9, 10, str(y))
+            if y != False:
+            
+                if y == self.yOuter - 1 and x + len( text ) == self.xOuter:
+                    self.cursewin.addstr( y,x, text[0:-1] )
+                    self.cursewin.insch( y, self.xOuter-1, text[-1] )
+                else:
+                    self.cursewin.addstr( y,x, text )
     
             self.refresh( refresh )
         
