@@ -303,7 +303,7 @@ class Canvas(object):
         if home[0] < 0 or home[0] >= yNow or home[1] < 0 or home[1] >= xNow:
             raise ValueError('Specified coordinates for home are outside window bounds.' )
         
-        if home[0] + size[0] >= yNow or home[1] +size[1] >= xNow:
+        if home[0] + size[0] > yNow or home[1] +size[1] > xNow:
             raise ValueError('Section defined is outside window bounds.' )            
         
         self.yOuter, self.xOuter = size
@@ -330,14 +330,12 @@ class Canvas(object):
         if clearScreen:
             self.cursewin.clear()
         
-        if self.border != False:
-            
-            if self.border == True:
-                self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
-            else:
-                self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
+        if self.border == True:
+            self.rectangle( self.yHome, self.xHome, self.yHome + self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
+        elif self.border != False:
+            self.textrectangle(self.border, self.yHome, self.xHome, self.yOuter - 1, self.xHome + self.xOuter - 1, True, False)
 
-            self.refresh()
+        if self.border != False:
             border = 1
         else:
             border = 0
@@ -367,7 +365,7 @@ class Canvas(object):
                 self.xOffset = self.margin[1] + border
                 self.xSize -= ( self.margin[1] + border ) * 2
 
-        for slot in self.slots:
+        for slot in self.slot:
             self.slotWrite(slot)
 
         self.paint()
@@ -379,7 +377,7 @@ class Canvas(object):
     def paint(self):
         pass
                 
-    def inBounds(self,y,x,endY,endX, offset = True ):
+    def inBounds(self,y,x,endY,endX, offset = False ):
 
         inBounds = True
         
@@ -394,6 +392,52 @@ class Canvas(object):
                 inBounds = False
                 
         return inBounds
+    
+    def hline(self,y,x,length, refresh=False):
+
+            if y >= 0 and y < self.ySize and x < self.xSize:
+                # we at least have the possibility of
+                # being within bounds
+                
+                if x < 0 and length > 0 - x:
+                    #we are too far to the left, but 
+                    #we can fix it
+                    length = length - x
+                    x = 0
+                    
+                if x >= 0:
+                    #we at least start within bounds
+                      
+                    if x + length > self.xSize:
+                        #too far right; shorten
+                        
+                        length -= self.xSize - ( length + x )
+                    
+                    y,x = self.offset( y,x )                    
+                    
+                    self.cursewin.hline( y,x, curses.ACS_HLINE, length )
+                    
+    def vline(self,y,x,length, refresh=False):
+
+            if x >= 0 and x < self.xSize and y < self.ySize:
+                # we at least have the possibilitx of
+                # being within bounds
+                
+                if y < 0 and length > 0 - y:
+                    #we are too high, but 
+                    #we can fiy it
+                    length = length - y
+                    y = 0
+                    
+                if y >= 0:
+                    #we at least start within bounds
+                      
+                    if y + length >= self.ySize:
+                        #too far right; shorten
+                        length = y - self.ySize
+                    
+                    self.cursewin.vline( *self.offset(y,x), curses.ACS_VLINE, length )
+            
                     
                     
     def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
@@ -462,12 +506,19 @@ class Canvas(object):
         if y < self.ySize and y >= 0 and x < self.xSize and x >= 0:
         # we are at least starting within the border of the screen
         
-            if x + len( text ) >= self.xSize:
+            if x + len( text ) > self.xSize:
                 # truncate from the right
-                overshot = x + len(text) - self.xSize  
+                
+                overshot = ( x + ( len(text) - self.xSize ) )
                 text = text[0:-overshot]
+                
+            y,x = self.offset(y, x)
             
-            self.cursewin.addstr( *self.offset(y,x), text )
+            if y == self.yOuter - 1 and x + len( text ) == self.xOuter:
+                self.cursewin.addstr( y,x, text[0:-1] )
+                self.cursewin.insch( y, self.xOuter-1, text[-1] )
+            else:
+                self.cursewin.addstr( y,x, text )
     
             self.refresh( refresh )
         
@@ -478,7 +529,7 @@ class Canvas(object):
         if x is None:
             x = self.xSize - 1
         
-        start = x - len(text) - 1
+        start = ( x - (  len(text) - 1 ) )
 
         self.write( y,start,text,refresh )
         
@@ -565,3 +616,6 @@ class Canvas(object):
                 self.writeCenter(slot['y'], text, refresh, midpoint)
             else:
                 self.write( slot['y'], x, text, refresh )
+                
+    def napms(self, ms):
+        curses.napms( ms )
