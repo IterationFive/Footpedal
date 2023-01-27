@@ -365,7 +365,7 @@ class Canvas(object):
                 self.xSize -= self.margin[1][0] + self.margin[1][1] + ( border * 2 )
             elif type( self.margin[1] ) == int:
                 self.xOffset = self.margin[1] + border
-                self.xSize -= ( self.margin[1] + border ) * 
+                self.xSize -= ( self.margin[1] + border ) * 2
 
         for slot in self.slots:
             self.slotWrite(slot)
