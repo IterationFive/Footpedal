@@ -5,12 +5,10 @@ Created on Jan 24, 2023
                 
 '''
 import curses
-
 import Canvases as cv
 
 class Canvas(object):
-    '''
-    
+    '''    
     A Canvas object provides tools for working with a section or the entirity of a 
     curses window.  It allows you to create a border and margins.
     
@@ -89,14 +87,20 @@ class Canvas(object):
                 if a value is not specified, then it will be
                 retrieved from cursewin.
                 
+                Note:  the sizes CV.AUTO and CV.MAX are here,
+                allowing an object of this class to be resized by
+                another canvas, but this class provides no 
+                functionality to adjust the position of contents
+                based on the size of the Canvas; if the canvas
+                is scaled to 
+                
             home 
                 tuple (x,y)
                 
                 the cursewin coordinates of the upper left hand corner
                 of the area handled by this object
                 
-                defaults to 0,0
-                
+                defaults to 0,0                
         
         Properties:
         
@@ -113,8 +117,6 @@ class Canvas(object):
             yOffset, xOffset
                 The curses coordinates of the upper left hand corner
                 of the available area
-                
-                
             slot
                 a dictionary for use by the slot functionality
                 
@@ -126,19 +128,25 @@ class Canvas(object):
             Canvas.getAvailableSize()
                 returns a tuple of (ySize, xSize)
                 
-            Canvas.frame()
-            
-                draws the border, if configured, and then uses 
-                yHome, xHome, yOuter, xOuter, margin, and border properties
-                to calculate ySize, xSize, yOffset, and xOffset
+            Canvas.getMinimumSize()
+                returns a tuple of (yOuter,xOuter)
+                (this ensures compatibiliy with DynamicCanvas)                    
                 
-            Canvas.drawBorder()
-            
-                if border is not False, draws the border as configured,
-                using cursewin.box(), cursewin.border(), curses.textpad.rectangle(), 
-                or by simply writing the provided characters to the screen.
+            Canvas.layout()
+                This method is empty in this class, but it can be used
+                in child classes to put slots on the screen.  It is run 
+                once, automatically, by the constructor.  No data should
+                be written to the screen
                 
-                automatically refreshes the screen.
+            Canvas.build()
+                Draws the border
+                calculates ySize, xSize, yOffset, and xOffset
+                fills any defined slots with their contents
+                runs Canvas.Paint()
+                
+            Canvas.paint()
+                Another empty method for use in child classes.  This
+                is run every time the screen is cleared.                  
         
             Canvas.offset( y, x )
             
@@ -179,7 +187,6 @@ class Canvas(object):
                 the string or list provided as config, using the same configuration as
                 the border parameter of the constructor (which, in fact, ends up getting
                 passed to this method.).
-            
                 
         Write Methods:
         
@@ -222,25 +229,31 @@ class Canvas(object):
             part of a given line as a place where text will be 
             written/updated, and stores the contents of the slot.
         
-            Canvas.setSlot(self, name, y, x, width, alignment=cv.LEFT, refresh=False):
+            Canvas.setSlot(name, y, x, width, contents='', alignment=cv.LEFT, refresh=False):
                 creates the slot.  erases the area it occupies.
                 
                 alignment determines how the text is aligned within 
                 the slot, and can be cv.LEFT, cv.RIGHT, cv.CENTER, or cv.CENTRE.
                 this is a default; a different alignment can be 
-                specified when the slot is written to.                
+                specified when the slot is written to.
+                
+            Canvas.setSlotContents( slot, data )
+                Sets the data in the slot without actually
+                writing it to the screen.  
                 
             Canvas.slotBlank(slot,refresh=False)
                 Erases the area occupied by the slot and sets the
                 contents to None.
                 
-            Canvas.slotWrite(slot, data, refresh=False, forceAlign=False):
+            Canvas.slotWrite(slot, data=None, refresh=False, forceAlign=False):
+                
+                This method stores the data in the slot, and 
+                then writes it to the screen.  id Data is not 
+                provided, the existing contents will be written 
+                to the screen.  
                 
                 If forceAlign is provided, it will overwrite the 
                 default alignment for the slot.
-                
-                This method stores the data in the slot, and 
-                then writes it to the screen.  
                 
                 If the string is larger than the width of the 
                 slot, it will be trimmed from the right.  
@@ -269,7 +282,6 @@ class Canvas(object):
         
     '''
 
-
     def __init__(self, cursewin, margin=0, border=False, size=(None,None), home=(0,0)):
         '''
         Constructor
@@ -292,8 +304,7 @@ class Canvas(object):
             raise ValueError('Specified coordinates for home are outside window bounds.' )
         
         if home[0] + size[0] >= yNow or home[1] +size[1] >= xNow:
-            raise ValueError('Section defined is outside window bounds.' )
-            
+            raise ValueError('Section defined is outside window bounds.' )            
         
         self.yOuter, self.xOuter = size
         self.ySize, self.xSize = size
@@ -301,6 +312,8 @@ class Canvas(object):
         self.yHome, self.xHome = home
 
         self.slot = {}
+        
+        self.layout()
         
         
     def getActualSize(self):
@@ -312,7 +325,10 @@ class Canvas(object):
     def getAvailableSize(self):
         return self.ySize, self.xSize    
     
-    def frame(self):
+    def build(self, clearScreen=True):
+        
+        if clearScreen:
+            self.cursewin.clear()
         
         if self.border != False:
             
@@ -349,7 +365,19 @@ class Canvas(object):
                 self.xSize -= self.margin[1][0] + self.margin[1][1] + ( border * 2 )
             elif type( self.margin[1] ) == int:
                 self.xOffset = self.margin[1] + border
-                self.xSize -= ( self.margin[1] + border ) * 2
+                self.xSize -= ( self.margin[1] + border ) * 
+
+        for slot in self.slots:
+            self.slotWrite(slot)
+
+        self.paint()
+                
+                
+    def layout(self):
+        pass
+    
+    def paint(self):
+        pass
                 
     def inBounds(self,y,x,endY,endX, offset = True ):
 
@@ -370,16 +398,16 @@ class Canvas(object):
                     
     def rectangle(self, y,x, endY, endX, refresh=False, offset = True):
             
-            if self.inBounds(y, x, endY, endX, offset):
-                self.cursewin.vline(y+1, x, curses.ACS_VLINE, endY - y - 1)                      
-                self.cursewin.hline(y, x+1, curses.ACS_HLINE, endX - x - 1)                      
-                self.cursewin.hline(endY, x+1, curses.ACS_HLINE, endX - x - 1)                      
-                self.cursewin.vline(y+1, endX, curses.ACS_VLINE, endY - y - 1)                      
-                self.cursewin.addch(y, x, curses.ACS_ULCORNER)                                    
-                self.cursewin.addch(y, endX, curses.ACS_URCORNER)                                         
-                self.cursewin.addch(endY, x, curses.ACS_LLCORNER)                              
-                self.cursewin.insch(endY, endX, curses.ACS_LRCORNER) 
-                self.refresh(refresh)
+        if self.inBounds(y, x, endY, endX, offset):
+            self.cursewin.vline(y+1, x, curses.ACS_VLINE, endY - y - 1)                      
+            self.cursewin.hline(y, x+1, curses.ACS_HLINE, endX - x - 1)                      
+            self.cursewin.hline(endY, x+1, curses.ACS_HLINE, endX - x - 1)                      
+            self.cursewin.vline(y+1, endX, curses.ACS_VLINE, endY - y - 1)                      
+            self.cursewin.addch(y, x, curses.ACS_ULCORNER)                                    
+            self.cursewin.addch(y, endX, curses.ACS_URCORNER)                                         
+            self.cursewin.addch(endY, x, curses.ACS_LLCORNER)                              
+            self.cursewin.insch(endY, endX, curses.ACS_LRCORNER) 
+            self.refresh(refresh)
                 
     def textrectangle(self, config, y, x, endY, endX, refresh=False, offset=True):
                 
@@ -455,7 +483,7 @@ class Canvas(object):
         self.write( y,start,text,refresh )
         
                 
-    def writeCenter(self, y, text, refresh=False, midpoint=None):
+    def writeCenter(self, y, text, refresh=False, midpoint=None): 
         
         text = str( text )
         
@@ -480,9 +508,13 @@ class Canvas(object):
         
         self.write( y,x, text, refresh)
         
-    def setSlot(self, name, y, x, width, alignment=cv.LEFT,refresh=False):
-        self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment }
+    def setSlot(self, name, y, x, width, contents='', alignment=cv.LEFT,refresh=False):
+        self.slot[name] = { 'y':y,'x':x,'width':width,'alignment':alignment, 'contents':contents }
         self.slotBlank(name, refresh )
+        
+    def setSlotContents(self, slot, data):
+        if slot in self.slots:
+            slot[slot] = data
         
     def slotGet(self, slot):
         if slot not in self.slot:
@@ -502,12 +534,16 @@ class Canvas(object):
         self.setSlot(slot, self.slot[slot]['y'],self.slot[slot]['x'],self.slot[slot]['width'],self.slot[slot]['alignment'])
         self.slotWrite( slot, contents, refresh )
         
-    def slotWrite(self, slot, data, refresh=False, forceAlign=False):
+    def slotWrite(self, slot, data=None, refresh=False, forceAlign=False):
         
         if slot in self.slot:
             self.slotBlank(slot)
             slot = self.slot[slot]
-            slot['contents'] = data
+            
+            if data is None:
+                data = slot['contents']
+            else:
+                slot['contents'] = data
             
             text = str( data )
             
@@ -520,12 +556,12 @@ class Canvas(object):
                 a = forceAlign
             else:
                 a = slot['alignment']
-            
-            blanks = slot['width'] - len( text )
-            
+                        
             if a == cv.RIGHT:
-                x += blanks
-            if a == cv.CENTER and blanks > 0:
-                x += int( blanks / 2 ) 
-                
-            self.write( slot['y'], x, text, refresh )
+                x += slot['width'] -1
+                self.writeRight( slot['y'], text, x, refresh )
+            if a == cv.CENTER:
+                midpoint = slot['x'] + ( int( slot['width'] /2 ) - 1 )
+                self.writeCenter(slot['y'], text, refresh, midpoint)
+            else:
+                self.write( slot['y'], x, text, refresh )
