@@ -316,12 +316,17 @@ class Canvas(object):
         if size[1] is None:
             size[1] = xNow
             
+        '''
+        
+        # this is interfering with DynamicCanvas
+        
         if home[0] < 0 or home[0] >= yNow or home[1] < 0 or home[1] >= xNow:
             raise ValueError('Specified coordinates for home are outside window bounds.' )
         
         if home[0] + size[0] > yNow or home[1] +size[1] > xNow:
-            raise ValueError('Section defined is outside window bounds.' )            
-        
+            raise ValueError('Section defined is outside window bounds.' )
+                        
+        '''
         self.yOuter, self.xOuter = size
         self.ySize, self.xSize = size
         self.yOffset, self.xOffset = home
@@ -330,6 +335,8 @@ class Canvas(object):
         self.slot = {}
         
         self.layout()
+        
+    def validateDimensions(self):
         
         
     def getActualSize(self):

@@ -6,6 +6,9 @@ Created on Jan 26, 2023
 
 import Canvases as cv
 import curses
+from pickle import NONE
+
+SCREEN, WINDOW, VIRTUAL, SUBWINDOW = 1,2,3,4
 
 class DynamicCanvas(cv.Canvas):
     '''
@@ -94,8 +97,54 @@ class DynamicCanvas(cv.Canvas):
     '''
 
 
-    def __init__(self, cursewin, parent=None, margin=0, border=False, size=(None, None), home=(0, 0),
-                 yAlign=cv.TOP, xAlign=cv.LEFT, spacing=0, orientation=cv.VERTICAL):
+    def __init__(self, parent=None, margin=0, border=False, size=(None, None), home=(0, 0),
+                 yAlign=cv.TOP, xAlign=cv.LEFT, spacing=0, orientation=cv.VERTICAL, subwindow=False):
+        
+        '''
+            screen - should be default
+            window 
+            subwindow
+            virtual
+        
+        size = list( size )
+        
+        yNow, xNow = cursewin.getmaxyx()
+            
+        if size[0] is None:
+            size[0] = yNow 
+        if size[1] is None:
+            size[1] = xNow
+            
+         
+         parent = None
+             new screen
+             do dimensions math
+         
+             
+            
+            
+        '''
+        
+        if hasattr(parent, 'cursewin') and subwindow=False:
+            # a virtual panel
+            self.parent = parent
+            self.cursewin = parent.cursewin
+            self.canvasType = VIRTUAL
+            
+        else:
+            
+            if parent = None:
+                self.parent = None
+                self.cursewin = curses.initscr()
+                self.canvasType = SCREEN
+            if hasattr( parent, 'cursewin'):
+                self.parent = None
+                
+                
+        
+        
+
+        
         cv.Canvas.__init__(self, cursewin, margin=margin, border=border, size=size, home=home)
         
         self.parent = parent
