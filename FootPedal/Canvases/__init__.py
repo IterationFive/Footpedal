@@ -16,3 +16,4 @@ HORIZONTAL = 1
 VERTICAL = 2
 
 from Canvases.Canvas import Canvas
+from Canvases.DynamicCanvas import DynamicCanvas
