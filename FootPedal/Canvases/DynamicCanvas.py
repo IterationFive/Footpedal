@@ -27,8 +27,10 @@ class DynamicCanvas(cv.Canvas):
         orientation
             cv.HORIZONTAL or cv.VERTICAL
             the orientation by which managed canvases are aligned
+            (note: any other option than the default cv.HORIZONTAL 
+            (which is 1) will result in a vertical orientation.
     
-    DynamicCanvas adds the follwing properties:
+    DynamicCanvas adds the following properties:
     
         parent 
         yAlign, xAlign
@@ -40,16 +42,22 @@ class DynamicCanvas(cv.Canvas):
         cvEnv
             A shared dictionary.  Is created by the mainCanvas and passed to all 
             canvases within it.
-        _allowUpdates
-            (mainCanvas only)
-            boolean.  This can be checked by automatically updating things to see if 
-            it's safe to proceed.  For example, if one is working in a textbox and 
-            another canvas updates the screen, it causes the cursor to move out of the
-            textbox (which is still otherwise working normally).
         canvases
             Canvases contained in, and managed by, this DynamicCanvas.
             Note that this refers to Canvases and any any object with that
             class as parent.
+            
+    DynamicCanvas adds these additional properties to the mainCanvas.
+    
+        _allowUpdates
+            boolean.  This can be checked by automatically updating things to see if 
+            it's safe to proceed.  For example, if one is working in a textbox and 
+            another canvas updates the screen, it causes the cursor to move out of the
+            textbox (which is still otherwise working normally).
+        cursorState
+            what state the cursor is in
+        echo
+            whether the keyboard is echoing to the screen
             
     DynamicCanvas overrides the following methods:
         
@@ -63,11 +71,16 @@ class DynamicCanvas(cv.Canvas):
             ( ex. writeCheck or inBounds ), then passes the input on
             to the parent.  This allows for all offsets to be applied,
             and prevents a misconfigured canvas from exceeding the 
-            bounds of its container. 
+            bounds of its container.
+            
+        DynamicCanvas.setEcho()
+        DynamicCanvas.setCursorState()
+            on mainCanvas, runs the parent method, but additionally 
+            tracks the status of echo/cursor in properties echo and cursorState
+            
         DynamicCanvas.getMinimumSize()   
             if size is hardcoded, returns that size if not, polls the canvases within 
             it and determines the minimum height and width.
-            
             
     DynamicCanvas adds the following methods:
     
@@ -78,8 +91,6 @@ class DynamicCanvas(cv.Canvas):
         DynamicCanvas.canUpdate()
             returns _allowUpdates
             
-    
-    
     '''
 
 
@@ -197,6 +208,20 @@ class DynamicCanvas(cv.Canvas):
             y,x,length = self.vlineCheck(y, x, length)
             if y!= False:
                 self.parent.vline( y, x, length, refresh )
+        
+    def setEcho(self, echo=False ):
+        if self.parent is None:
+            cv.Canvas.setEcho( echo )
+            self.echo = echo
+        else:
+            self.mainCanvas.setEcho(echo)
+        
+    def setCursorState(self, state=True):
+        if self.parent is None:
+            cv.Canvas.setCursorState(self, state)
+            self.cursorState = state
+        else:
+            self.mainCanvas.setCursorState(state)
         
     
     

@@ -181,12 +181,21 @@ class Canvas(object):
                 You can use cursewin coordinates if offset is False.  Mainly
                 this was to let me use this function to draw the border.
                 
-            Cancas.textRectangle(config, y, x, endY, endX, refresh=False, offset=True)
+            Canvas.textRectangle(config, y, x, endY, endX, refresh=False, offset=True)
             
                 Draws a rectangle at the the given start and end coordinates using 
                 the string or list provided as config, using the same configuration as
                 the border parameter of the constructor (which, in fact, ends up getting
                 passed to this method.).
+                
+            Canvas.setEcho( echo=False )
+                activates or deactivates keyboard echo
+                
+            Canvas.setCursorState( state )
+                Where state is:
+                    0 - no visible cursor
+                    1 - standard underline cursor
+                    2 - block cursor                
                 
         Write Methods:
         
@@ -663,3 +672,13 @@ class Canvas(object):
                 
     def napms(self, ms):
         curses.napms( ms )
+        
+    def setEcho(self, echo=False ):
+        if echo == False:
+            curses.noecho()
+        else:
+            curses.echo()
+        
+    def setCursorState(self, state=True):
+        curses.curs_set(state)
+        
